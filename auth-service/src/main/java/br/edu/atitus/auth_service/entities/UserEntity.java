@@ -19,22 +19,19 @@ import jakarta.persistence.Table;
 
 @Entity
 @Table(name = "tb_user")
-public class UserEntity implements UserDetails{
-	
+public class UserEntity implements UserDetails {
+
 	@Id
 	@GeneratedValue(strategy = GenerationType.UUID)
 	private UUID id;
-	
-	@Column(nullable = false)
-	private String name;
-	
+
 	@Column(nullable = false)
 	private String email;
-	
+
 	@Column(nullable = false)
 	@JsonIgnore
 	private String password;
-	
+
 	@Column
 	@Enumerated(EnumType.ORDINAL)
 	private UserType type;
@@ -45,14 +42,6 @@ public class UserEntity implements UserDetails{
 
 	public void setId(UUID id) {
 		this.id = id;
-	}
-
-	public String getName() {
-		return name;
-	}
-
-	public void setName(String name) {
-		this.name = name;
 	}
 
 	public String getEmail() {

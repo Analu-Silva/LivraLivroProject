@@ -1,8 +1,7 @@
-create table tb_user (
-        id UUID default gen_random_uuid() not null,
-        email varchar(255) not null,
-        name varchar(255) not null,
-        password varchar(255) not null,
-        type smallint check (type between 0 and 1),
-        primary key (id)
+CREATE TABLE tb_user (
+        id UUID DEFAULT gen_random_uuid() NOT NULL,
+        email VARCHAR(255) NOT NULL,
+        password VARCHAR(255) NOT NULL,
+        TYPE SMALLINT CHECK (TYPE BETWEEN 0 AND 1),
+        PRIMARY KEY (id)
     )

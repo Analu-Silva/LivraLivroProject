@@ -1,6 +1,5 @@
 package br.edu.atitus.auth_service.controllers;
 
-import org.springframework.beans.BeanUtils;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -16,8 +15,8 @@ import br.edu.atitus.auth_service.components.JwtUtil;
 import br.edu.atitus.auth_service.dtos.SigninDTO;
 import br.edu.atitus.auth_service.dtos.SigninResponseDTO;
 import br.edu.atitus.auth_service.dtos.SignupDTO;
+import br.edu.atitus.auth_service.dtos.SignupResponseDTO;
 import br.edu.atitus.auth_service.entities.UserEntity;
-import br.edu.atitus.auth_service.entities.UserType;
 import br.edu.atitus.auth_service.services.UserService;
 
 @RestController
@@ -33,18 +32,14 @@ public class AuthController {
 		this.authConfig = authConfig;
 	}
 
-	private UserEntity convertDTO2Entity(SignupDTO dto) {
-		var user = new UserEntity();
-		BeanUtils.copyProperties(dto, user);
-		return user;
-	}
-
 	@PostMapping("/signup")
-	public ResponseEntity<UserEntity> signup(@RequestBody SignupDTO dto) throws Exception {
-		var user = convertDTO2Entity(dto);
-		user.setType(UserType.Common);
-		service.save(user);
-		return ResponseEntity.status(HttpStatus.CREATED).body(user);
+	public ResponseEntity<SignupResponseDTO> signup(@RequestBody SignupDTO dto) throws Exception {
+		try {
+			SignupResponseDTO response = service.register(dto);
+		return ResponseEntity.status(HttpStatus.CREATED).body(response);
+		} catch (Exception e) {
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+		}
 	}
 
 	@PostMapping("/signin")
@@ -56,7 +51,9 @@ public class AuthController {
 		return ResponseEntity.ok(response);
 
 	}
-
+	
+	//TODO Deleta Conta
+	
 	@ExceptionHandler(Exception.class)
 	public ResponseEntity<String> handleException(Exception e) {
 		String cleanMessage = e.getMessage().replaceAll("[\\r\\n]", " ");
