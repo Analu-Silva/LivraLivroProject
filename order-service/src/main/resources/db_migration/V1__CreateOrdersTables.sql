@@ -6,7 +6,7 @@ CREATE TABLE tb_order (
 
 CREATE TABLE tb_order_item (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-    product_id UUID NOT NULL,
+    book_id UUID NOT NULL,
     quantity INTEGER NOT NULL,
     price_at_purchase NUMERIC(7,2) NOT NULL,
     currency_at_purchase CHAR(3) NOT NULL,

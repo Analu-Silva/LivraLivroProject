@@ -22,25 +22,25 @@ import jakarta.persistence.Transient;
 @Table(name = "tb_order")
 public class OrderEntity {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
-    
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
-    private LocalDateTime orderDate;
+	@Id
+	@GeneratedValue(strategy = GenerationType.UUID)
+	private UUID id;
 
-    @Column(nullable = false)
-    @JsonIgnore
-    private UUID customerId; // ID do cliente logado
+	@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
+	private LocalDateTime orderDate;
 
-    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<OrderItemEntity> items;
-    
-    @Transient
-    private BigDecimal totalPrice;
-    
-    @Transient
-    private BigDecimal totalConvertedPrice;
+	@Column(nullable = false)
+	@JsonIgnore
+	private UUID customerId; // ID do cliente logado
+
+	@OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
+	private List<OrderItemEntity> items;
+
+	@Transient
+	private BigDecimal totalPrice;
+
+	@Transient
+	private BigDecimal totalConvertedPrice;
 
 	public UUID getId() {
 		return id;
@@ -90,5 +90,4 @@ public class OrderEntity {
 		this.totalConvertedPrice = totalConvertedPrice;
 	}
 
-    
 }

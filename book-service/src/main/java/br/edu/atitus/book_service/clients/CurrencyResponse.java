@@ -1,20 +1,15 @@
-package br.edu.atitus.order_service.clients;
+package br.edu.atitus.book_service.clients;
 
 import java.math.BigDecimal;
 
 public class CurrencyResponse {
 
 	private Long id;
-
 	private String source;
-
 	private String target;
-
-	private BigDecimal conversionRate;
-
+	private double conversionRate;
 	private BigDecimal convertedValue;
-
-	private String enviroment;
+	private String environment;
 
 	public Long getId() {
 		return id;
@@ -40,11 +35,11 @@ public class CurrencyResponse {
 		this.target = target;
 	}
 
-	public BigDecimal getConversionRate() {
+	public double getConversionRate() {
 		return conversionRate;
 	}
 
-	public void setConversionRate(BigDecimal conversionRate) {
+	public void setConversionRate(double conversionRate) {
 		this.conversionRate = conversionRate;
 	}
 
@@ -56,12 +51,11 @@ public class CurrencyResponse {
 		this.convertedValue = convertedValue;
 	}
 
-	public String getEnviroment() {
-		return enviroment;
+	public String getEnvironment() {
+		return environment;
 	}
 
-	public void setEnviroment(String enviroment) {
-		this.enviroment = enviroment;
+	public void setEnvironment(String environment) {
+		this.environment = environment;
 	}
-
 }

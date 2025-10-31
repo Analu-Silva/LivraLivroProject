@@ -18,8 +18,8 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import br.edu.atitus.order_service.clients.ProductClient;
-import br.edu.atitus.order_service.clients.ProductResponse;
+import br.edu.atitus.order_service.clients.BookClient;
+import br.edu.atitus.order_service.clients.BookResponse;
 import br.edu.atitus.order_service.dtos.OrderDTO;
 import br.edu.atitus.order_service.entities.OrderEntity;
 import br.edu.atitus.order_service.entities.OrderItemEntity;
@@ -30,11 +30,11 @@ import br.edu.atitus.order_service.services.OrderService;
 public class OrderController {
 
 	private final OrderService orderService;
-	private final ProductClient productClient;
+	private final BookClient bookClient;
 
-	public OrderController(OrderService orderService, ProductClient productClient) {
+	public OrderController(OrderService orderService, BookClient bookClient) {
 		this.orderService = orderService;
-		this.productClient = productClient;
+		this.bookClient = bookClient;
 	}
 
 	@PostMapping
@@ -48,16 +48,16 @@ public class OrderController {
 
 		List<OrderItemEntity> items = orderDTO.items().stream().map(dto -> {
 			OrderItemEntity item = new OrderItemEntity();
-			item.setProductId(dto.productId());
+			item.setBookId(dto.bookId());
 			item.setQuantity(dto.quantity());
 
-			// Busca os dados do produto via FeignClient para obter preço, descrição, etc
-			ProductResponse product = productClient.getProductById(dto.productId());
-			item.setPriceAtPurchase(product.price());
-			item.setCurrencyAtPurchase(product.currency());
+			// Busca os dados do livro via FeignClient para obter preço, descrição, etc
+			BookResponse book = bookClient.getBookById(dto.bookId());
+			item.setPriceAtPurchase(book.price());
+			item.setCurrencyAtPurchase(book.currency());
 
-			// Preenche o product transient para retorno
-			item.setProduct(product);
+			// Preenche o book transient para retorno
+			item.setBook(book);
 
 			item.setOrder(order);
 			return item;

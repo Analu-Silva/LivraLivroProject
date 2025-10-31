@@ -10,6 +10,6 @@ import org.springframework.stereotype.Repository;
 import br.edu.atitus.order_service.entities.OrderEntity;
 
 @Repository
-public interface OrderRepository extends JpaRepository<OrderEntity, UUID>{
+public interface OrderRepository extends JpaRepository<OrderEntity, UUID> {
 	Page<OrderEntity> findByCustomerId(UUID customerId, Pageable pageable);
 }

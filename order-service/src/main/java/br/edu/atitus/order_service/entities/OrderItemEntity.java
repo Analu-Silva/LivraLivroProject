@@ -5,7 +5,7 @@ import java.util.UUID;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
-import br.edu.atitus.order_service.clients.ProductResponse;
+import br.edu.atitus.order_service.clients.BookResponse;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -21,34 +21,34 @@ import jakarta.persistence.Transient;
 @Table(name = "tb_order_item")
 public class OrderItemEntity {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
+	@Id
+	@GeneratedValue(strategy = GenerationType.UUID)
+	private UUID id;
 
-    // ID do produto vindo do product-service
-    @Column(nullable = false)
-    private UUID productId;
+	// ID do livro vindo do book-service
+	@Column(nullable = false)
+	private UUID bookId;
 
-    @Column(nullable = false)
-    private Integer quantity;
+	@Column(nullable = false)
+	private Integer quantity;
 
-    @Column(nullable = false)
-    private BigDecimal priceAtPurchase; // guarda o preço no momento da compra
+	@Column(nullable = false)
+	private BigDecimal priceAtPurchase; // guarda o preço no momento da compra
 
-    @Column(nullable = false)
-    private String currencyAtPurchase; // guarda a moeda no momento da compra
-    
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "order_id")
-    @JsonIgnore
-    private OrderEntity order;
+	@Column(nullable = false)
+	private String currencyAtPurchase; // guarda a moeda no momento da compra
 
-    @Transient
-    private ProductResponse product; // preenchido via chamada REST
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "order_id")
+	@JsonIgnore
+	private OrderEntity order;
 
-    @Transient
-    private BigDecimal convertedPriceAtPruchase; 
-    
+	@Transient
+	private BookResponse book; // preenchido via chamada REST
+
+	@Transient
+	private BigDecimal convertedPriceAtPruchase;
+
 	public UUID getId() {
 		return id;
 	}
@@ -57,12 +57,12 @@ public class OrderItemEntity {
 		this.id = id;
 	}
 
-	public UUID getProductId() {
-		return productId;
+	public UUID getBookId() {
+		return bookId;
 	}
 
-	public void setProductId(UUID productId) {
-		this.productId = productId;
+	public void setBookId(UUID bookId) {
+		this.bookId = bookId;
 	}
 
 	public Integer getQuantity() {
@@ -97,12 +97,12 @@ public class OrderItemEntity {
 		this.order = order;
 	}
 
-	public ProductResponse getProduct() {
-		return product;
+	public BookResponse getBook() {
+		return book;
 	}
 
-	public void setProduct(ProductResponse product) {
-		this.product = product;
+	public void setBook(BookResponse book) {
+		this.book = book;
 	}
 
 	public BigDecimal getConvertedPriceAtPruchase() {
@@ -113,5 +113,4 @@ public class OrderItemEntity {
 		this.convertedPriceAtPruchase = convertedPriceAtPruchase;
 	}
 
-    
 }

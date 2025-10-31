@@ -14,8 +14,8 @@ public class ApiGatewayConfig {
 //				.route(p -> p.path("/get")
 //						.filters(f -> f.addRequestHeader("X-USER-NAME", "username")
 //						.addRequestParameter("name", "fulano")).uri("http://httpbin.org:80"))
-				.route(p -> p.path("/books/**").uri("lb://product-service"))
-				.route(p -> p.path("/ws/books/**").uri("lb://product-service"))
+				.route(p -> p.path("/books/**").uri("lb://book-service"))
+				.route(p -> p.path("/ws/books/**").uri("lb://book-service"))
 				// http://localhost:8080 (era assim antes do lb...)
 				// Eu quero que redirecione para o product-service para se eu tiver + instancias
 				.route(p -> p.path("/currency/**").uri("lb://currency-service"))
