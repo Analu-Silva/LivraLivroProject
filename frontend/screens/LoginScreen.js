@@ -28,7 +28,7 @@ export default function LoginScreen({ navigation }) {
     <SafeAreaView style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.container}>
         <View style={styles.header}>
-          <BackButton onPress={() => navigation.goBack()} />
+          <BackButton onPress={() => navigation.navigate('Register')} />
           <Text style={styles.title}>Login</Text>
         </View>
 
@@ -100,6 +100,7 @@ const styles = StyleSheet.create({
     width: '100%',
     flexDirection: 'row',
     alignItems: 'center',
+    marginTop: 30,
     marginBottom: 10,
     paddingHorizontal: 5,
   },
