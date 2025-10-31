@@ -9,11 +9,10 @@ CREATE TABLE tb_order_item (
     product_id UUID NOT NULL,
     quantity INTEGER NOT NULL,
     price_at_purchase NUMERIC(7,2) NOT NULL,
-    currency_at_purchase varchar(3) not null,
+    currency_at_purchase CHAR(3) NOT NULL,
     order_id UUID,
     CONSTRAINT fk_order
         FOREIGN KEY(order_id) 
         REFERENCES tb_order(id)
         ON DELETE CASCADE
 );
-
