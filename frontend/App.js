@@ -31,7 +31,7 @@ function App() {
       <StatusBar style="light" backgroundColor={primaryColor} />
       <NavigationContainer>
         <Stack.Navigator
-          initialRouteName="Register"
+          initialRouteName="Home"
           screenOptions={{
             headerStyle: { backgroundColor: primaryColor },
             headerTintColor: "#fff",
