@@ -7,6 +7,7 @@ import { registerRootComponent } from "expo";
 // Importações das suas telas
 import LoginScreen from "./screens/LoginScreen";
 import HomeScreen from "./screens/HomeScreen";
+import PreHomeScreen from "./screens/PreHomeScreen";
 import RegisterScreen from "./screens/RegisterScreen";
 import StartScreen from "./screens/StartScreen";
 import AddressScreen from "./screens/AddressScreen";
@@ -16,6 +17,9 @@ import CartScreen from "./screens/CartScreen";
 import CheckoutScreen from "./screens/CheckoutScreen";
 import MySellsScreen from "./screens/MySellsScreen";
 import SearchScreen from "./screens/SearchScreen";
+import ProfileCreationScreen from "./screens/ProfileCreationScreen";
+
+
 
 const primaryColor = "#B431F4";
 
@@ -41,6 +45,11 @@ function App() {
             options={{ headerShown: false }}
           />
           <Stack.Screen
+          name="PreHome"
+          component={PreHomeScreen}
+          options={{ headerShown: false }}
+          />
+          <Stack.Screen
             name="Login"
             component={LoginScreen}
             options={{ headerShown: false }}
@@ -48,6 +57,11 @@ function App() {
           <Stack.Screen
             name="Register"
             component={RegisterScreen}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="ProfileCreation"
+            component={ProfileCreationScreen}
             options={{ headerShown: false }}
           />
           <Stack.Screen 

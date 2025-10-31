@@ -1,14 +1,14 @@
-import React, { useEffect } from 'react'; // 👈 precisa importar useEffect
+import React, { useEffect } from 'react';
 import { View, Image, StyleSheet, SafeAreaView } from 'react-native';
 
 export default function StartScreen({ navigation }) {
   useEffect(() => {
     const timer = setTimeout(() => {
-      navigation.replace('Home');
+      navigation.replace('PreHome'); // ← Vai para PreHome (que tem o modal)
     }, 2500); // 2.5 segundos
 
     return () => clearTimeout(timer);
-  }, [navigation]); // 👈 boa prática incluir navigation na lista
+  }, [navigation]);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -19,7 +19,7 @@ export default function StartScreen({ navigation }) {
           style={styles.logo}
           resizeMode="contain"
         />
-
+        
         {/* Texto LivraLivro */}
         <Image
           source={require('../assets/LivraLivro.png')}

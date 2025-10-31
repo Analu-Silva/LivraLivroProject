@@ -297,14 +297,14 @@ export default function RegisterScreen({ navigation }) {
 
   const handleSuccessModalConfirm = () => {
     setShowSuccessModal(false);
-    navigation.navigate('Login');
+    navigation.navigate('ProfileCreation');
   };
 
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.container}>
         <View style={styles.header}>
-          <BackButton onPress={() => (step === 2 ? setStep(1) : navigation.goBack())} />
+          <BackButton onPress={() => (step === 2 ? setStep(1) : navigation.navigate('Start'))} />
           <Text style={styles.title}>Cadastro</Text>
         </View>
         <View style={styles.logoContainer}>
