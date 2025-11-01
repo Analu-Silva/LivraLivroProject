@@ -1,8 +1,9 @@
 volumes:
-  db-product-data:
+  db-book-data:
   db-currency-data:
-  db-user-data:
   db-order-data:
+  db-user-auth-data:
+  db-user-profile-data:
 
 services:
 
@@ -60,37 +61,37 @@ services:
       EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE: http://discovery-service:8761/eureka
     
   # -------------------------------
-  db-product:
+  db-book:
     image: postgres:17
     environment:
-      POSTGRES_DB: db_product
+      POSTGRES_DB: db_book
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: 654333
     volumes:
-      - db-product-data:/var/lib/postgresql/data
+      - db-book-data:/var/lib/postgresql/data
     
-  product-service:
-    image: product-service:latest
+  book-service:
+    image: book-service:latest
     build:
-      context: ./product-service
+      context: ./book-service
     depends_on:
       - discovery-service
-      - db-product
+      - db-book
       - currency-service
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://db-product:5432/db_product
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db-book:5432/db_book
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: 654333
       EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE: http://discovery-service:8761/eureka
   # -------------------------------
-  db-user:
+  db-user-auth:
     image: postgres:17
     environment:
-      POSTGRES_DB: db_user
+      POSTGRES_DB: db_user_auth
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: 654333
     volumes:
-      - db-user-data:/var/lib/postgresql/data
+      - db-user-auth-data:/var/lib/postgresql/data
     
   auth-service:
     image: auth-service:latest
@@ -98,13 +99,37 @@ services:
       context: ./auth-service
     depends_on:
       - discovery-service
-      - db-user
+      - db-user-auth
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://db-user:5432/db_user
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db-user-auth:5432/db_user_auth
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: 654333
       EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE: http://discovery-service:8761/eureka
     
+  # -------------------------------
+  db-user-profile:
+    image: postgres:17
+    environment:
+      POSTGRES_DB: db_user_profile
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 654333
+    volumes:
+      - db-user-profile-data:/var/lib/postgresql/data
+    
+  user-service:
+    image: user-service:latest
+    build:
+      context: ./user-service
+    depends_on:
+      - discovery-service
+      - db-user-profile
+      - auth-service
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db-user-profile:5432/db_user_profile
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: 654333
+      EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE: http://discovery-service:8761/eureka
+
   # -------------------------------
   db-order:
     image: postgres:17
