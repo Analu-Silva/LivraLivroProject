@@ -5,11 +5,12 @@ import { StatusBar } from "expo-status-bar";
 import { registerRootComponent } from "expo";
 
 // Importações das suas telas
+import StartScreen from "./screens/StartScreen";
 import LoginScreen from "./screens/LoginScreen";
 import HomeScreen from "./screens/HomeScreen";
 import PreHomeScreen from "./screens/PreHomeScreen";
 import RegisterScreen from "./screens/RegisterScreen";
-import StartScreen from "./screens/StartScreen";
+import ProfileCreationScreen from "./screens/ProfileCreationScreen";
 import AddressScreen from "./screens/AddressScreen";
 import AddSaleScreen from "./screens/AddSaleScreen";
 import BookScreen from "./screens/BookScreen";
@@ -17,8 +18,8 @@ import CartScreen from "./screens/CartScreen";
 import CheckoutScreen from "./screens/CheckoutScreen";
 import MySellsScreen from "./screens/MySellsScreen";
 import SearchScreen from "./screens/SearchScreen";
-import ProfileCreationScreen from "./screens/ProfileCreationScreen";
-
+import MenuScreen from "./screens/MenuScreen";
+import SettingsScreen from "./screens/SettingsScreen";
 
 
 const primaryColor = "#B431F4";
@@ -31,7 +32,7 @@ function App() {
       <StatusBar style="light" backgroundColor={primaryColor} />
       <NavigationContainer>
         <Stack.Navigator
-          initialRouteName="Home"
+          initialRouteName="Start"
           screenOptions={{
             headerStyle: { backgroundColor: primaryColor },
             headerTintColor: "#fff",
@@ -47,7 +48,6 @@ function App() {
           <Stack.Screen
           name="PreHome"
           component={PreHomeScreen}
-          options={{ headerShown: false }}
           />
           <Stack.Screen
             name="Login"
@@ -67,7 +67,16 @@ function App() {
           <Stack.Screen 
             name="Home" 
             component={HomeScreen} 
-            options={{ headerShown: false  }} 
+          />
+          <Stack.Screen
+            name="Menu"
+            component={MenuScreen}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="Settings"
+            component={SettingsScreen}
+            options={{ headerShown: false }}
           />
           <Stack.Screen 
             name="Sacola" 
@@ -80,7 +89,7 @@ function App() {
             options={{ headerShown: false }} 
           />
           <Stack.Screen 
-            name="Detalhe" 
+            name="Detalhes do Livro" 
             component={BookScreen} 
             options={{ headerShown: false  }} 
           />

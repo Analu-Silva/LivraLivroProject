@@ -57,6 +57,15 @@ export default function ProductDetailScreen() {
 
   return (
     <ScrollView style={styles.container}>
+      {/* Header com botão voltar */}
+      <View style={styles.header}>
+        <TouchableOpacity onPress={() => navigation.goBack("Home")}>
+          <Ionicons name="arrow-back" size={26} color="#B431F4" />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>LIVRO</Text>
+        <Ionicons name="heart-outline" size={26} color="#B431F4" />
+      </View>
+
       <View style={styles.content}>
         <Image
           source={{
