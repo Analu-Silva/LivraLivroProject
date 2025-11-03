@@ -96,6 +96,7 @@ const styles = StyleSheet.create({
     flexDirection: "row", 
     alignItems: "center", 
     gap: 15, 
+    marginTop: 30,
     marginBottom: 20 
   },
   headerTitle: { 

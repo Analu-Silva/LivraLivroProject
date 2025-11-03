@@ -13,7 +13,7 @@ import {
   TextInput,
 } from "react-native";
 import { CurrentRenderContext, useNavigation } from "@react-navigation/native";
-import { Feather } from "@expo/vector-icons"; 
+import { Feather } from "@expo/vector-icons";
 
 const genericBookImage = require('../assets/livro.jpg');
 const flagBr = require('../assets/bandeira brasil.png');
@@ -25,11 +25,11 @@ const searchIcon = require('../assets/icon pesquisa.png');
 
 // Cores e tamanhos definidos para replicar o design
 const primaryPurple = '#B431F4';
-const secundaryColor = '#A8F000'
+const secundaryColor = '#A8F000';
 const textColorDark = '#333';
 const greyBackground = '#f0f2f5';
 
-// Dados de exemplo para os livros
+// Dados de exemplo para os livros (mantidos, mas só serão usados quando o FlatList for descomentado)
 const bookSectionsData = [
   {
     id: 'section-1',
@@ -142,7 +142,7 @@ const bookSectionsData = [
 ];
 
 export default function HomeScreen() {
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [searchText, setSearchText] = useState("");
   const [currency, setCurrency] = useState("BRL");
   const [showCurrencyMenu, setShowCurrencyMenu] = useState(false);
@@ -153,12 +153,11 @@ export default function HomeScreen() {
   const [openFilterSubmenu, setOpenFilterSubmenu] = useState(null);
   const [openSortSubmenu, setOpenSortSubmenu] = useState(null);
 
-  const [selectedFilter, setSelectedFilter] = useState(null); 
+  const [selectedFilter, setSelectedFilter] = useState(null);
   const [selectedSort, setSelectedSort] = useState(null);
   const [showLoginModal, setShowLoginModal] = useState(false);
 
 
-  // dados de menu (pode ajustar os textos aqui se quiser)
   const filterMenu = [
     { title: 'Gênero', sub: ['Romance', 'Terror', 'Suspense'] },
     { title: 'Autor', sub: null },
@@ -172,19 +171,13 @@ export default function HomeScreen() {
   ];
 
   useEffect(() => {
-    setTimeout(() => {
-      setLoading(false);
-    }, 1000);
-  }, []);
-
-  useEffect(() => {
     navigation.setOptions({
       headerShown: false,
     });
   }, [navigation]);
 
   const formatPrice = (price) => {
-    return `R$ ${price.toFixed(2).replace(".", ",")}`;
+    return `R\$ ${price.toFixed(2).replace(".", ",")}`;
   };
 
   const handleSearchSubmit = () => {
@@ -194,8 +187,8 @@ export default function HomeScreen() {
   const renderBookCard = ({ item }) => (
     <TouchableOpacity
       style={styles.bookCard}
-      onPress={() => navigation.navigate("ProductDetail", { id: item.id })}
-    > {/*mudar pra Detalhe */}
+      onPress={() => navigation.navigate("Detalhe", { id: item.id })}
+    >
       <Image source={item.image} style={styles.bookCover} />
       <View style={styles.priceContainer}>
         <Text style={styles.priceText}>{formatPrice(item.price)}</Text>
@@ -215,14 +208,16 @@ export default function HomeScreen() {
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.appContainer}>
 
-        {/* Header com Logo, Bandeiras, Sacola e Perfil */}
+        {/* ========================================================================================================
+           HEADER: Este bloco está CORRIGIDO e descomentado.
+           ======================================================================================================== */}
         <View style={styles.header}>
           <Image source={require('../assets/logo.png')} style={styles.logo} />
           <View style={styles.headerRight}>
             <TouchableOpacity onPress={() => setCurrency(currency === "BRL" ? "USD" : "BRL")}>
-              <Image 
-                source={currency === "BRL" ? flagBr : flagUsa} 
-                style={styles.flagIcon} 
+              <Image
+                source={currency === "BRL" ? flagBr : flagUsa}
+                style={styles.flagIcon}
               />
             </TouchableOpacity>
             <TouchableOpacity onPress={() => navigation.navigate('Sacola')}>
@@ -234,7 +229,9 @@ export default function HomeScreen() {
           </View>
         </View>
 
-        {/* Barra de pesquisa com ícone dentro */}
+        {/* ========================================================================================================
+           BARRA DE PESQUISA: Este bloco está CORRIGIDO e descomentado (com a correção da adjacência).
+           ======================================================================================================== */}
         <View style={styles.searchBarContainer}>
           <View style={styles.searchBarInner}>
             <TextInput
@@ -243,8 +240,7 @@ export default function HomeScreen() {
               placeholderTextColor="#999"
               value={searchText}
               onChangeText={setSearchText}
-            />
-            <TouchableOpacity 
+            /><TouchableOpacity // <-- CORREÇÃO: Sem espaço entre TextInput e TouchableOpacity
               style={styles.searchIconButton}
               onPress={handleSearchSubmit}
             >
@@ -253,7 +249,9 @@ export default function HomeScreen() {
           </View>
         </View>
 
-        {/* Filter and Sort Buttons (com submenus) */}
+        {/* ========================================================================================================
+           FILTER AND SORT BUTTONS: Este bloco está CORRIGIDO e descomentado.
+           ======================================================================================================== */}
         <View style={styles.filterSortContainer}>
           {/* FILTRAR POR */}
           <View style={styles.dropdownWrapper}>
@@ -275,8 +273,7 @@ export default function HomeScreen() {
                 ]}
               >
                 Filtrar por
-              </Text>
-              <Feather
+              </Text><Feather // <-- CORREÇÃO: Sem espaço entre Text e Feather
                 name={showFilterDropdown ? "chevron-up" : "chevron-down"}
                 size={16}
                 color={selectedFilter ? primaryPurple : "white"}
@@ -466,9 +463,7 @@ export default function HomeScreen() {
           </View>
         </View>
 
-        <View style={styles.shadowDivider} />
-
-        {/* Content Scrollable Area (Book Sections) */}
+        <View style={styles.shadowDivider}/>
         <ScrollView style={styles.contentScrollable}>
           {bookSectionsData.map((section) => (
             <View key={section.id} style={styles.bookSection}>
@@ -485,7 +480,6 @@ export default function HomeScreen() {
           ))}
         </ScrollView>
 
-        {/* Bottom Navigation */}
         <View style={styles.bottomNavWrapper}>
           <View style={styles.bottomNav}>
             <TouchableOpacity>
@@ -504,14 +498,13 @@ export default function HomeScreen() {
 
             <TouchableOpacity>
               <View style={styles.menu}>
-                <View style={styles.menuLine} />
-                <View style={styles.menuLine} />
-                <View style={styles.menuLine} />
+                <View style={styles.menuLine}/>
+                <View style={styles.menuLine}/>
+                <View style={styles.menuLine}/>
               </View>
             </TouchableOpacity>
           </View>
         </View>
-
       </View>
     </SafeAreaView>
   );
@@ -520,7 +513,7 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: greyBackground,
+    backgroundColor: '#fff',
   },
   appContainer: {
     flex: 1,
@@ -538,7 +531,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 20,
-    paddingTop: 35,
+    paddingTop: 28,
     backgroundColor: '#fff',
   },
   logo: {
@@ -549,7 +542,7 @@ const styles = StyleSheet.create({
   headerRight: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 15,
+    gap: 22,
   },
   flagIcon: {
     width: 32,
@@ -597,16 +590,12 @@ const styles = StyleSheet.create({
     height: 22,
     resizeMode: 'contain',
   },
-  searchIconImage: {
-    width: 22,
-    height: 22,
-    resizeMode: 'contain',
-  },
   filterSortContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'flex-start',
     marginBottom: 10,
+    zIndex: 10,
   },
   dropdownWrapper: {
     position: 'relative',
@@ -667,7 +656,6 @@ const styles = StyleSheet.create({
     // leve destaque quando abrir submenu principal (opcional)
   },
   submenuContainer: {
-    // sub-items aparecem logo abaixo do item principal, com pequeno espaçamento
     paddingLeft: 8,
     paddingRight: 8,
     paddingBottom: 6,
@@ -692,13 +680,13 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   filterButtonActive: {
-    backgroundColor: secundaryColor, // verde do botão ativo
+    backgroundColor: secundaryColor,
   },
   sortButtonActive: {
     backgroundColor: secundaryColor,
   },
   filterSortButtonTextActive: {
-    color: primaryPurple, // texto escuro sobre fundo verde
+    color: primaryPurple,
     fontWeight: '700',
   },
   arrowIcon: {
@@ -711,7 +699,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.15,
     shadowRadius: 6,
-    elevation: 6, // para Android
+    elevation: 6,
     zIndex: 1,
   },
   contentScrollable: {
@@ -774,6 +762,7 @@ const styles = StyleSheet.create({
     bottom: 20,
     width: '100%',
     alignItems: 'center',
+    zIndex: 10,
   },
   bottomNav: {
     backgroundColor: '#FFF',
@@ -797,10 +786,10 @@ const styles = StyleSheet.create({
     resizeMode: 'contain',
   },
   iconFavorito: {
-    width: 29,
-    height: 29,
+    width: 28,
+    height: 28,
     resizeMode: 'contain',
-    alignItems: 'center', 
+    alignItems: 'center',
   },
   menu: {
     width: 22,

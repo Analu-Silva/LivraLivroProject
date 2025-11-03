@@ -100,6 +100,7 @@ const styles = StyleSheet.create({
     width: '100%',
     flexDirection: 'row',
     alignItems: 'center',
+    marginTop: 30,
     marginBottom: 10,
     paddingHorizontal: 5,
   },

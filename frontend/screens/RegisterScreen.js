@@ -452,7 +452,7 @@ export default function RegisterScreen({ navigation }) {
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: '#FFF' },
   container: { alignItems: 'center', paddingVertical: 20, paddingHorizontal: 20 },
-  header: { width: '100%', flexDirection: 'row', alignItems: 'center', marginBottom: 10, paddingHorizontal: 5 },
+  header: { width: '100%', flexDirection: 'row', alignItems: 'center', marginTop: 30, marginBottom: 10, paddingHorizontal: 5 },
   backButton: { marginRight: 15 },
   title: {  fontSize: 26,
     fontWeight: '600',
@@ -477,7 +477,7 @@ const styles = StyleSheet.create({
   eyeIcon: {
     position: 'absolute',
     right: 40,
-    top: 42,
+    top: 37,
   },
 });
 

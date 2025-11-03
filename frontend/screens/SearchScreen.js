@@ -56,6 +56,7 @@ const styles = StyleSheet.create({
   header: { 
     flexDirection: "row", 
     alignItems: "center", 
+    marginTop: 30,
     marginBottom: 20, 
     gap: 10 },
   input: {

@@ -156,7 +156,7 @@ const styles = StyleSheet.create({
   productPrice: {
     fontSize: 28,
     fontWeight: "bold",
-    color: "#9b59b6",
+    color: primaryPurple,
     textAlign: "center",
     marginBottom: 20,
   },
