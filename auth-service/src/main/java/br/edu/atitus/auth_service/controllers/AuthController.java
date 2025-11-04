@@ -16,17 +16,17 @@ import br.edu.atitus.auth_service.dtos.SigninDTO;
 import br.edu.atitus.auth_service.dtos.SigninResponseDTO;
 import br.edu.atitus.auth_service.dtos.SignupDTO;
 import br.edu.atitus.auth_service.dtos.SignupResponseDTO;
-import br.edu.atitus.auth_service.entities.UserEntity;
-import br.edu.atitus.auth_service.services.UserService;
+import br.edu.atitus.auth_service.entities.UserAuthEntity;
+import br.edu.atitus.auth_service.services.UserAuthService;
 
 @RestController
 @RequestMapping("/auth")
 public class AuthController {
 
-	private UserService service;
+	private UserAuthService service;
 	private final AuthenticationConfiguration authConfig;
 
-	public AuthController(UserService service, AuthenticationConfiguration authConfig) {
+	public AuthController(UserAuthService service, AuthenticationConfiguration authConfig) {
 		super();
 		this.service = service;
 		this.authConfig = authConfig;
@@ -34,32 +34,29 @@ public class AuthController {
 
 	@PostMapping("/signup")
 	public ResponseEntity<SignupResponseDTO> signup(@RequestBody SignupDTO dto) throws Exception {
-		try {
-			SignupResponseDTO response = service.register(dto);
+		SignupResponseDTO response = service.register(dto);
 		return ResponseEntity.status(HttpStatus.CREATED).body(response);
-		} catch (Exception e) {
-			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
-		}
+
 	}
 
 	@PostMapping("/signin")
-	public ResponseEntity<SigninResponseDTO> PostSignin(@RequestBody SigninDTO signin) throws AuthenticationException, Exception {
+	public ResponseEntity<SigninResponseDTO> PostSignin(@RequestBody SigninDTO signin)
+			throws AuthenticationException, Exception {
 		authConfig.getAuthenticationManager()
-					.authenticate(new UsernamePasswordAuthenticationToken(signin.email(), signin.password()));
-		UserEntity user = (UserEntity) service.loadUserByUsername(signin.email());
-		SigninResponseDTO response = new SigninResponseDTO(user, JwtUtil.generateToken(user.getEmail(), user.getId(), user.getType()));
+				.authenticate(new UsernamePasswordAuthenticationToken(signin.email(), signin.password()));
+		UserAuthEntity user = (UserAuthEntity) service.loadUserByUsername(signin.email());
+		SigninResponseDTO response = new SigninResponseDTO(user,
+				JwtUtil.generateToken(user.getEmail(), user.getId(), user.getType()));
 		return ResponseEntity.ok(response);
 
 	}
-	
-	//TODO Deleta Conta
-	
+
 	@ExceptionHandler(Exception.class)
 	public ResponseEntity<String> handleException(Exception e) {
 		String cleanMessage = e.getMessage().replaceAll("[\\r\\n]", " ");
 		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(cleanMessage);
 	}
-	
+
 	@ExceptionHandler(AuthenticationException.class)
 	public ResponseEntity<String> handleException(AuthenticationException e) {
 		String cleanMessage = e.getMessage().replaceAll("[\\r\\n]", " ");

@@ -19,7 +19,7 @@ import jakarta.persistence.Table;
 
 @Entity
 @Table(name = "tb_user_auth")
-public class UserEntity implements UserDetails {
+public class UserAuthEntity implements UserDetails {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.UUID)

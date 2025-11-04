@@ -8,7 +8,7 @@ import org.springframework.security.web.authentication.WebAuthenticationDetailsS
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-import br.edu.atitus.auth_service.services.UserService;
+import br.edu.atitus.auth_service.services.UserAuthService;
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -16,11 +16,11 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 @Component
-public class AuthTokenFilter extends OncePerRequestFilter{
+public class AuthTokenFilter extends OncePerRequestFilter {
 
-	private final UserService userService;
+	private final UserAuthService userService;
 
-	public AuthTokenFilter(UserService userService) {
+	public AuthTokenFilter(UserAuthService userService) {
 		super();
 		this.userService = userService;
 	}
@@ -41,6 +41,5 @@ public class AuthTokenFilter extends OncePerRequestFilter{
 		}
 		filterChain.doFilter(request, response);
 	}
-	
-	
+
 }

@@ -19,12 +19,12 @@ public class ConfigSecurity {
 		http.csrf(csrf -> csrf.disable())
 				.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 				.authorizeHttpRequests(auth -> auth
+						.requestMatchers("/auth/**").permitAll()
 						// .requestMatchers("/auth*","/auth/**","/swagger-ui*", "swagger-ui/**",
 						// "/v3/api-docs/**").permitAll()
 						// .requestMatchers(HttpMethod.OPTIONS).permitAll()
-						.requestMatchers("/ws**", "/ws/**").authenticated().anyRequest().permitAll())
+						.requestMatchers("/ws**", "/ws/**").permitAll().anyRequest().authenticated());
 				//.addFilterBefore(authTokenFilter, UsernamePasswordAuthenticationFilter.class);
-				;
 		return http.build();
 	}
 
