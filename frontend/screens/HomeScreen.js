@@ -496,6 +496,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'flex-start',
     marginBottom: 10,
+    zIndex: 1000,
   },
   dropdownWrapper: {
     position: 'relative',
@@ -552,7 +553,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.15,
     shadowRadius: 10,
     elevation: 10,
-    zIndex: 20,
+    zIndex: 9999,
   },
   dropdownItem: {
     paddingVertical: 12,
