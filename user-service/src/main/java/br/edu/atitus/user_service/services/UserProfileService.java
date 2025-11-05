@@ -5,6 +5,7 @@ import java.util.UUID;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import br.edu.atitus.user_service.components.CpfValidator;
 import br.edu.atitus.user_service.dtos.UserAddressDTO;
 import br.edu.atitus.user_service.dtos.UserDTO;
 import br.edu.atitus.user_service.dtos.UserDetailsRequestDTO;
@@ -33,13 +34,12 @@ public class UserProfileService {
 	@Transactional
 	public UserProfileEntity createProfile(UserDTO dto) throws Exception {
 
-		// TODO melhorar verificações
 		if(dto.name() == null || dto.name().isEmpty()) {
 			throw new Exception("Nome não pode ser nulo");
 		}
 		
-		if (dto.cpf() == null || dto.cpf().isEmpty()) {
-			throw new Exception("CPF não pode ser nulo");
+		if (dto.cpf() == null || dto.cpf().isEmpty() || !CpfValidator.validateCpf(dto.cpf().trim())) {
+			throw new Exception("CPF inválido");
 		}
 		
 		if (dto.phoneNumber() == null || dto.phoneNumber().isEmpty()) {
