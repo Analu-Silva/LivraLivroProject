@@ -1,6 +1,5 @@
 package br.edu.atitus.auth_service.controllers;
 
-import java.util.Map;
 import java.util.UUID;
 
 import org.springframework.http.HttpStatus;
@@ -61,17 +60,5 @@ public class WsAuthController {
 	}
 
 	// TODO Deleta Conta
-
-	@ExceptionHandler(Exception.class)
-	public ResponseEntity<String> handleException(Exception e) {
-		String cleanMessage = e.getMessage().replaceAll("[\\r\\n]", " ");
-		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(cleanMessage);
-	}
-
-	@ExceptionHandler(SecurityException.class)
-	public ResponseEntity<String> handleException(SecurityException e) {
-		String cleanMessage = e.getMessage().replaceAll("[\\r\\n]", " ");
-		return ResponseEntity.status(HttpStatus.FORBIDDEN).body(cleanMessage);
-	}
 
 }

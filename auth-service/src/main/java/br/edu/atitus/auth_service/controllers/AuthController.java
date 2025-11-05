@@ -50,16 +50,5 @@ public class AuthController {
 		return ResponseEntity.ok(response);
 
 	}
-
-	@ExceptionHandler(Exception.class)
-	public ResponseEntity<String> handleException(Exception e) {
-		String cleanMessage = e.getMessage().replaceAll("[\\r\\n]", " ");
-		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(cleanMessage);
-	}
-
-	@ExceptionHandler(AuthenticationException.class)
-	public ResponseEntity<String> handleException(AuthenticationException e) {
-		String cleanMessage = e.getMessage().replaceAll("[\\r\\n]", " ");
-		return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(cleanMessage);
-	}
+	
 }
