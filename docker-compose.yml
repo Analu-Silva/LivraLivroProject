@@ -11,7 +11,7 @@ services:
   discovery-service:
     image: discovery-service:latest
     build:
-      context: ./discovery-service
+      context: ./backend/discovery-service
     ports:
       - "8761:8761"
     
@@ -19,7 +19,7 @@ services:
   config-service:
     image: config-service:latest
     build:
-      context: ./config-service
+      context: ./backend/config-service
     depends_on:
       - discovery-service
     environment:
@@ -29,7 +29,7 @@ services:
   greeting-service:
     image: greeting-service:latest
     build:
-      context: ./greeting-service
+      context: ./backend/greeting-service
     depends_on:
       - discovery-service
       - config-service
@@ -50,7 +50,7 @@ services:
   currency-service:
     image: currency-service:latest
     build:
-      context: ./currency-service
+      context: ./backend/currency-service
     depends_on:
       - discovery-service
       - db-currency
@@ -73,7 +73,7 @@ services:
   book-service:
     image: book-service:latest
     build:
-      context: ./book-service
+      context: ./backend/book-service
     depends_on:
       - discovery-service
       - db-book
@@ -96,7 +96,7 @@ services:
   auth-service:
     image: auth-service:latest
     build:
-      context: ./auth-service
+      context: ./backend/auth-service
     depends_on:
       - discovery-service
       - db-user-auth
@@ -119,7 +119,7 @@ services:
   user-service:
     image: user-service:latest
     build:
-      context: ./user-service
+      context: ./backend/user-service
     depends_on:
       - discovery-service
       - db-user-profile
@@ -143,7 +143,7 @@ services:
   order-service:
     image: order-service:latest
     build:
-      context: ./order-service
+      context: ./backend/order-service
     depends_on:
       - discovery-service
       - db-order
@@ -157,7 +157,7 @@ services:
   gateway-service:
     image: gateway-service:latest
     build:
-      context: ./gateway-service
+      context: ./backend/gateway-service
     ports:
       - "8765:8765"
     depends_on:
