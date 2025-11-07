@@ -23,18 +23,18 @@ import jakarta.validation.Valid;
 @RequestMapping("/auth")
 public class AuthController {
 
-	private UserAuthService service;
+	private UserAuthService userAuthService;
 	private final AuthenticationConfiguration authConfig;
 
-	public AuthController(UserAuthService service, AuthenticationConfiguration authConfig) {
+	public AuthController(UserAuthService userAuthService, AuthenticationConfiguration authConfig) {
 		super();
-		this.service = service;
+		this.userAuthService = userAuthService;
 		this.authConfig = authConfig;
 	}
 
 	@PostMapping("/signup")
 	public ResponseEntity<SignupResponseDTO> signup(@Valid @RequestBody SignupDTO dto) {
-		SignupResponseDTO response = service.registerAccount(dto);
+		SignupResponseDTO response = userAuthService.registerAccount(dto);
 		return ResponseEntity.status(HttpStatus.CREATED).body(response);
 
 	}
@@ -44,7 +44,7 @@ public class AuthController {
 			throws AuthenticationException, Exception {
 		authConfig.getAuthenticationManager()
 				.authenticate(new UsernamePasswordAuthenticationToken(signin.email(), signin.password()));
-		UserAuthEntity user = (UserAuthEntity) service.loadUserByUsername(signin.email());
+		UserAuthEntity user = (UserAuthEntity) userAuthService.loadUserByUsername(signin.email());
 		SigninResponseDTO response = new SigninResponseDTO(user,
 				JwtUtil.generateToken(user.getEmail(), user.getId(), user.getType()));
 		return ResponseEntity.ok(response);

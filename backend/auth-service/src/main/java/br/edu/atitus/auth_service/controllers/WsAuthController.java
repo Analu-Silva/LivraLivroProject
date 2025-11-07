@@ -3,6 +3,7 @@ package br.edu.atitus.auth_service.controllers;
 import java.util.UUID;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -20,22 +21,11 @@ import jakarta.validation.Valid;
 @RequestMapping("/ws/auth")
 public class WsAuthController {
 
-	private UserAuthService service;
+	private UserAuthService userAuthService;
 
-	public WsAuthController(UserAuthService service) {
+	public WsAuthController(UserAuthService userAuthService) {
 		super();
-		this.service = service;
-	}
-
-	private void validateUserType(Integer userType) {
-		if (userType != 0 && userType != 1)
-			throw new SecurityException("Usuário sem permissão");
-	}
-
-	private void validateUserTypeAndById(UUID id, UUID UserId, Integer userType) {
-
-		if (userType != 0 && !id.equals(UserId))
-			throw new SecurityException("Você não está autorizado a modificar dados de outros usuários");
+		this.userAuthService = userAuthService;
 	}
 
 	@PatchMapping("/credentials/{id}")
@@ -43,10 +33,7 @@ public class WsAuthController {
 			@Valid @RequestBody CredentialsUpdateDTO credentials, @RequestHeader("X-User-Id") UUID UserId,
 			@RequestHeader("X-User-Type") Integer userType) {
 
-		validateUserType(userType);
-		validateUserTypeAndById(id, UserId, userType);
-
-		CredentialsUpdateDTO response = service.updateAccount(id, credentials);
+		CredentialsUpdateDTO response = userAuthService.updateAccount(id, credentials, UserId, userType);
 		return ResponseEntity.ok(response);
 	}
 
@@ -54,13 +41,18 @@ public class WsAuthController {
 	public ResponseEntity<EmailDTO> getEmail(@PathVariable UUID id, @RequestHeader("X-User-Id") UUID UserId,
 			@RequestHeader("X-User-Type") Integer userType) {
 
-		validateUserType(userType);
-		validateUserTypeAndById(id, UserId, userType);
-
-		EmailDTO email = service.getUserEmail(id);
+		EmailDTO email = userAuthService.getUserEmail(id,  UserId, userType);
 		return ResponseEntity.ok(email);
 	}
 
-	// TODO Deleta Conta
+	// Deleta a conta de um usuário (menos os pedidos)
 
+	@DeleteMapping("/deleteAccount/{id}")
+	public ResponseEntity<Void> deleteAccount(@PathVariable UUID id, @RequestHeader("X-User-Id") UUID UserId,
+			@RequestHeader("X-User-Type") Integer userType) {
+
+		userAuthService.deleteUserAccount(id, UserId, userType);
+
+		return ResponseEntity.noContent().build();
+	}
 }

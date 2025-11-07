@@ -9,6 +9,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import br.edu.atitus.auth_service.clients.BookServiceClient;
 import br.edu.atitus.auth_service.clients.UserServiceClient;
 import br.edu.atitus.auth_service.components.PasswordValidator;
 import br.edu.atitus.auth_service.components.EmailValidator;
@@ -31,13 +32,15 @@ public class UserAuthService implements UserDetailsService {
 	private final UserAuthRepository userAuthRepository;
 	private final PasswordEncoder encoder;
 	private final UserServiceClient userServiceClient;
+	private final BookServiceClient bookServiceClient;
 
 	public UserAuthService(UserAuthRepository userAuthRepository, PasswordEncoder encoder,
-			UserServiceClient userServiceClient) {
+			UserServiceClient userServiceClient, BookServiceClient bookServiceClient) {
 		super();
 		this.userAuthRepository = userAuthRepository;
 		this.encoder = encoder;
 		this.userServiceClient = userServiceClient;
+		this.bookServiceClient = bookServiceClient;
 	}
 
 	private void validateEmail(String email) {
@@ -60,6 +63,17 @@ public class UserAuthService implements UserDetailsService {
 
 		if (userAuthRepository.existsByEmailAndIdNot(email, id))
 			throw new ResourceAlreadyExistsException("Já existe usuário com este e-mail");
+	}
+
+	private void validateUserType(Integer userType) {
+		if (userType != 0 && userType != 1)
+			throw new SecurityException("Usuário sem permissão");
+	}
+
+	private void validateUserTypeAndById(UUID id, UUID UserId, Integer userType) {
+
+		if (userType != 0 && !id.equals(UserId))
+			throw new SecurityException("Você não está autorizado a modificar dados de outros usuários");
 	}
 
 	private UserAuthEntity findUserById(UUID id) {
@@ -115,8 +129,11 @@ public class UserAuthService implements UserDetailsService {
 	}
 
 	@Transactional
-	public CredentialsUpdateDTO updateAccount(UUID id, CredentialsUpdateDTO dto) {
+	public CredentialsUpdateDTO updateAccount(UUID id, CredentialsUpdateDTO dto, UUID UserId, Integer userType) {
 		UserAuthEntity authUser = findUserById(id);
+
+		validateUserType(userType);
+		validateUserTypeAndById(id, UserId, userType);
 
 		if (dto.email() != null && !dto.email().isEmpty() && !dto.email().equals(authUser.getEmail())) {
 
@@ -138,12 +155,64 @@ public class UserAuthService implements UserDetailsService {
 	}
 
 	@Transactional
-	public EmailDTO getUserEmail(UUID id) {
+	public EmailDTO getUserEmail(UUID id, UUID UserId, Integer userType) {
+
+		validateUserType(userType);
+		validateUserTypeAndById(id, UserId, userType);
+
 		UserAuthEntity authUser = findUserById(id);
 
 		String userEmail = authUser.getEmail();
 
 		return new EmailDTO(userEmail);
+	}
+
+	public void deleteUserAccount(UUID id, UUID UserId, Integer userType) {
+
+		validateUserType(userType);
+		validateUserTypeAndById(id, UserId, userType);
+
+		try {
+			bookServiceClient.deleteAccount(id);
+
+		} catch (FeignException e) {
+
+			if (e.status() == 404) {
+
+			} else {
+				throw new ServiceCommunicationException("Erro na comunicação entre os serviços", e);
+			}
+
+		} catch (Exception e) {
+			throw new ServiceCommunicationException("Erro inesperado, tente novamente mais tarde", e);
+		}
+
+		try {
+			userServiceClient.deleteAccount(id);
+
+		} catch (FeignException e) {
+
+			if (e.status() == 404) {
+
+			} else {
+				throw new ServiceCommunicationException("Erro na comunicação entre os serviços", e);
+			}
+
+		} catch (Exception e) {
+			throw new ServiceCommunicationException("Erro inesperado, tente novamente mais tarde", e);
+		}
+
+		try {
+			
+			if (userAuthRepository.existsById(id)) {
+			userAuthRepository.deleteById(id);
+			
+			} else {
+				
+			}
+		} catch (Exception e) {
+			throw new RuntimeException("Erro ao deletar conta");
+		}
 	}
 
 }

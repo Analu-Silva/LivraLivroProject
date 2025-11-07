@@ -19,7 +19,7 @@ public record SignupDTO(
 		@Size(min = 8, max = 256, message = "Senha deve ter entre 8 e 256 caracteres") String password,
 
 		@NotBlank(message = "O número de telefone é obrigatório") 
-		@Size(min = 8, max = 256, message = "Insira número de telefone válido") String phoneNumber,
+		@Size(min = 11, max = 11, message = "Insira número de celular válido") String phoneNumber,
 
 		@NotBlank(message = "O CPF é obrigatório") @Size(min = 11, max = 11, message = "CPF deve ter 11 caracteres") String cpf,
 

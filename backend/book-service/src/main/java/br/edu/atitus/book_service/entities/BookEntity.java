@@ -41,7 +41,8 @@ public class BookEntity {
 	private Integer numberOfPages;
 
 	@ManyToMany
-	@JoinTable(name = "tb_book_genres", joinColumns = @JoinColumn(name = "book_id"), inverseJoinColumns = @JoinColumn(name = "genre_id"))
+	@JoinTable(name = "tb_book_genres", joinColumns = @JoinColumn(name = "book_id"), 
+	inverseJoinColumns = @JoinColumn(name = "genre_id"))
 	private List<BookGenreEntity> genre;
 
 	@ManyToOne
