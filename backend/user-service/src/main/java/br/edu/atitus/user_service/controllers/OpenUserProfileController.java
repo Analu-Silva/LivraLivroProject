@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import br.edu.atitus.user_service.dtos.UserDTO;
 import br.edu.atitus.user_service.entities.UserProfileEntity;
+import br.edu.atitus.user_service.exceptions.InvalidDataException;
 import br.edu.atitus.user_service.services.UserProfileService;
 
 @RestController
@@ -23,13 +24,13 @@ public class OpenUserProfileController {
 	}
 
 	@PostMapping("/internal/createUserProfile")
-	public ResponseEntity<UserProfileEntity> createProfile(@RequestBody UserDTO dto) {
+	public ResponseEntity<?> createProfile(@RequestBody UserDTO dto) {
 		try {
 			UserProfileEntity savedProfile = userProfileService.createProfile(dto);
 			return ResponseEntity.status(HttpStatus.CREATED).body(savedProfile);
 
-		} catch (Exception e) {
-			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+		} catch (InvalidDataException e) {
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
 		}
 	}
 }
