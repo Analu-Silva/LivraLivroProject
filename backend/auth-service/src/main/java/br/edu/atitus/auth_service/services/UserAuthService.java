@@ -9,6 +9,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import br.edu.atitus.auth_service.clients.BookServiceClient;
 import br.edu.atitus.auth_service.clients.UserServiceClient;
 import br.edu.atitus.auth_service.components.PasswordValidator;
@@ -33,34 +36,34 @@ public class UserAuthService implements UserDetailsService {
 	private final PasswordEncoder encoder;
 	private final UserServiceClient userServiceClient;
 	private final BookServiceClient bookServiceClient;
+	private final ObjectMapper objectMapper;
 
 	public UserAuthService(UserAuthRepository userAuthRepository, PasswordEncoder encoder,
-			UserServiceClient userServiceClient, BookServiceClient bookServiceClient) {
+			UserServiceClient userServiceClient, BookServiceClient bookServiceClient, ObjectMapper objectMapper) {
 		super();
 		this.userAuthRepository = userAuthRepository;
 		this.encoder = encoder;
 		this.userServiceClient = userServiceClient;
 		this.bookServiceClient = bookServiceClient;
+		this.objectMapper = objectMapper;
 	}
 
 	private void validateEmail(String email) {
-		if (email == null || email.isEmpty() || !EmailValidator.validateEmail(email.trim()))
-			throw new InvalidDataException("E-mail informado inválido");
+		if (!EmailValidator.validateEmail(email.trim()))
+			throw new InvalidDataException("E-mail inválido");
 	}
 
 	private void validatePassword(String password) {
-		if (password == null || password.isEmpty() || !PasswordValidator.validatePassword(password.trim()))
-			throw new InvalidDataException("Senha informada inválida");
+		if (!PasswordValidator.validatePassword(password.trim()))
+			throw new InvalidDataException("Senha inválida");
 	}
 
 	private void validateEmailUniquenessWithIdNull(String email) {
-
 		if (userAuthRepository.existsByEmail(email.trim()))
 			throw new ResourceAlreadyExistsException("Já existe usuário com este e-mail");
 	}
 
 	private void validateEmailUniquenessWithIdNotNull(UUID id, String email) {
-
 		if (userAuthRepository.existsByEmailAndIdNot(email, id))
 			throw new ResourceAlreadyExistsException("Já existe usuário com este e-mail");
 	}
@@ -71,7 +74,6 @@ public class UserAuthService implements UserDetailsService {
 	}
 
 	private void validateUserTypeAndById(UUID id, UUID UserId, Integer userType) {
-
 		if (userType != 0 && !id.equals(UserId))
 			throw new SecurityException("Você não está autorizado a modificar dados de outros usuários");
 	}
@@ -112,8 +114,24 @@ public class UserAuthService implements UserDetailsService {
 
 		} catch (FeignException e) {
 
+			String errorMessage = e.contentUTF8();
+
+			try {
+				JsonNode errorNode = objectMapper.readTree(errorMessage);
+
+				if (errorNode.has("message")) {
+					errorMessage = errorNode.get("message").asText();
+				}
+			} catch (Exception jsonException) {
+
+			}
+			
+			if(e.status() == 409) {
+				throw new ResourceAlreadyExistsException(errorMessage);
+			}
+
 			if (e.status() >= 400 && e.status() < 500) {
-				throw new InvalidDataException("Informação(ões) inválidas:" + e.contentUTF8());
+				throw new InvalidDataException(e.contentUTF8());
 
 			} else {
 				throw new ServiceCommunicationException("Erro na comunicação entre os serviços", e);
@@ -136,17 +154,16 @@ public class UserAuthService implements UserDetailsService {
 		validateUserTypeAndById(id, UserId, userType);
 
 		if (dto.email() != null && !dto.email().isEmpty() && !dto.email().equals(authUser.getEmail())) {
-
 			validateEmail(dto.email());
 			validateEmailUniquenessWithIdNotNull(id, dto.email());
+
 			authUser.setEmail(dto.email().trim());
 		}
 
 		if (dto.password() != null && !dto.password().isEmpty()) {
-
 			validatePassword(dto.password());
-			authUser.setPassword(encoder.encode(dto.password().trim()));
 
+			authUser.setPassword(encoder.encode(dto.password().trim()));
 		}
 
 		UserAuthEntity savedAuth = userAuthRepository.save(authUser);
@@ -203,12 +220,12 @@ public class UserAuthService implements UserDetailsService {
 		}
 
 		try {
-			
+
 			if (userAuthRepository.existsById(id)) {
-			userAuthRepository.deleteById(id);
-			
+				userAuthRepository.deleteById(id);
+
 			} else {
-				
+
 			}
 		} catch (Exception e) {
 			throw new RuntimeException("Erro ao deletar conta");

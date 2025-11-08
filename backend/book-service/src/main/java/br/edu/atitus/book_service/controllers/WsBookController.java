@@ -99,8 +99,6 @@ public class WsBookController {
 		return ResponseEntity.ok("Excluído"); // Ou null ou ok.("Excluído")
 	}
 
-	// Deleta todos livros da conta de um usuário
-
 	@DeleteMapping("/internal/deleteAccount/{id}")
 	@Transactional
 	public ResponseEntity<Void> deleteAllBooksFromUser(@PathVariable UUID id) {

@@ -11,5 +11,11 @@ public record SigninDTO(
 
 		@NotBlank(message = "A senha é obrigatória") 
 		@Size(min = 8, max = 256, message = "Senha deve ter entre 8 e 256 caracteres") String password) {
+	
+	public SigninDTO {
 
+		if (email != null) {
+			email = email.trim();
+		}
+	}
 }
