@@ -11,8 +11,8 @@ import BackButton from "../components/BackButton";
 
 const primaryPurple = "#B431F4";
 
-const SalesScreen = ({ navigation }) => {
-  const salesItems = [
+const OrdersScreen = ({ navigation }) => {
+  const orderItems = [
     {
       id: 1,
       title: "Um de nós está mentindo",
@@ -31,47 +31,42 @@ const SalesScreen = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
-      {/* HEADER */}
-      <View style={styles.header}>
-        <BackButton onPress={() => navigation.goBack()} />
-        <Text style={styles.headerTitle}>Suas vendas</Text>
-      </View>
-
-      {/* LISTA DE VENDAS */}
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={{ paddingBottom: 50 }}
       >
-        {salesItems.map((item) => (
-          <View key={item.id} style={styles.card}>
-            <Image source={{ uri: item.image }} style={styles.bookImage} />
-            <View style={styles.infoContainer}>
-              <Text style={styles.priceText}>R$ {item.price.toFixed(2)}</Text>
-              <Text style={styles.titleText}>{item.title}</Text>
+        {/* Header */}
+        <View style={styles.header}>
+          <BackButton onPress={() => navigation.navigate("Menu")} />
+          <Text style={styles.headerTitle}>Seus Pedidos</Text>
+        </View>
 
-              <TouchableOpacity
-                style={styles.editButton}
-                onPress={() => navigation.navigate("Adicionar")}
-              >
-                <Text style={styles.editButtonText}>Alterar informações</Text>
-              </TouchableOpacity>
+        {/* Lista de pedidos */}
+        <View style={styles.listContainer}>
+          {orderItems.map((item) => (
+            <View key={item.id} style={styles.card}>
+              <Image source={{ uri: item.image }} style={styles.bookImage} />
+              <View style={styles.infoContainer}>
+                <Text style={styles.priceText}>
+                  R$ {item.price.toFixed(2).replace(".", ",")}
+                </Text>
+                <Text style={styles.titleText}>{item.title}</Text>
+                <TouchableOpacity
+                  style={styles.reviewButton}
+                  onPress={() => navigation.navigate("Adicionar")}
+                >
+                  <Text style={styles.reviewButtonText}>Avaliar</Text>
+                </TouchableOpacity>
+              </View>
             </View>
-          </View>
-        ))}
-
-        {/* BOTÃO ADICIONAR VENDA */}
-        <TouchableOpacity
-          style={styles.addButton}
-          onPress={() => navigation.navigate("Adicionar")}
-        >
-          <Text style={styles.addButtonText}>Adicionar venda</Text>
-        </TouchableOpacity>
+          ))}
+        </View>
       </ScrollView>
     </View>
   );
 };
 
-export default SalesScreen;
+export default OrdersScreen;
 
 const styles = StyleSheet.create({
   container: {
@@ -84,7 +79,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginTop: 30,
     marginBottom: 20,
-    paddingHorizontal: 25, 
+    paddingHorizontal: 25,
   },
   headerTitle: {
     fontSize: 24,
@@ -92,9 +87,8 @@ const styles = StyleSheet.create({
     color: primaryPurple,
     marginLeft: 10,
   },
-  scrollContent: {
-    paddingHorizontal: 25, 
-    paddingBottom: 50,
+  listContainer: {
+    paddingHorizontal: 25,
   },
   card: {
     flexDirection: "row",
@@ -129,7 +123,7 @@ const styles = StyleSheet.create({
     marginTop: 3,
     fontWeight: "bold",
   },
-  editButton: {
+  reviewButton: {
     borderColor: primaryPurple,
     borderWidth: 1.2,
     borderRadius: 20,
@@ -138,24 +132,9 @@ const styles = StyleSheet.create({
     alignSelf: "flex-start",
     marginTop: 8,
   },
-  editButtonText: {
+  reviewButtonText: {
     color: primaryPurple,
     fontSize: 13,
     fontWeight: "500",
-  },
-  addButton: {
-    backgroundColor: primaryPurple,
-    borderRadius: 30,
-    paddingVertical: 10,
-    alignItems: "center",
-    justifyContent: "center",
-    width: 160,
-    alignSelf: "center",
-    marginTop: 10,
-  },
-  addButtonText: {
-    color: "#FFF",
-    fontSize: 16,
-    fontWeight: "bold",
   },
 });

@@ -1,184 +1,202 @@
 import React, { useState } from 'react';
 import {
-View,
-Text,
-TextInput,
-TouchableOpacity,
-StyleSheet,
-Image,
-SafeAreaView,
-ScrollView,
-Alert,
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
+  Image,
+  SafeAreaView,
+  ScrollView,
+  Modal,
 } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 
 const primaryColor = '#B431F4';
-const secondaryColor = '#A8F000';
-const lightPurple = '#DAB8F7';
+const secondaryColor = '#a4dc22ff';
 
 export default function ProfileCreationScreen({ navigation }) {
-const [profileImage, setProfileImage] = useState(null);
-const [gender, setGender] = useState('');
-const [description, setDescription] = useState('');
+  const [profileImage, setProfileImage] = useState(null);
+  const [gender, setGender] = useState('');
+  const [description, setDescription] = useState('');
 
-const handleImagePick = () => {
-    Alert.alert('Foto de Perfil', 'Funcionalidade de escolher foto será implementada');
-};
+  const [modalVisible, setModalVisible] = useState(false);
+  const [modalMessage, setModalMessage] = useState('');
 
-const handleContinue = () => {
+  const openModal = (msg) => {
+    setModalMessage(msg);
+    setModalVisible(true);
+  };
+
+  const handleImagePick = () => {
+    openModal('Funcionalidade de escolher foto será implementada.');
+  };
+
+  const handleContinue = () => {
     if (!gender) {
-    Alert.alert('Atenção', 'Por favor, selecione seu gênero');
-    return;
+      openModal('Por favor, selecione seu gênero.');
+      return;
     }
-    Alert.alert('Perfil criado com sucesso!');
-    navigation.navigate('Home');
-};
 
-return (
+    openModal('Perfil criado com sucesso!');
+
+    setTimeout(() => {
+      setModalVisible(false);
+      navigation.navigate('Home');
+    }, 1200);
+  };
+
+  return (
     <SafeAreaView style={styles.safeArea}>
-    <ScrollView contentContainerStyle={styles.container}>
-        
+      <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
         <View style={styles.frame}>
-        
-        {/* Foto de perfil com círculo */}
-        <TouchableOpacity 
-            style={styles.imageContainer}
-            onPress={handleImagePick}
-        >
+
+          {/* Foto de perfil */}
+          <TouchableOpacity style={styles.imageContainer} onPress={handleImagePick}>
             <Image
-            source={profileImage ? { uri: profileImage } : require('../assets/perfil sem foto.png')}
-            style={styles.intersect}
+              source={
+                profileImage
+                  ? { uri: profileImage }
+                  : require('../assets/perfil sem foto.png')
+              }
+              style={styles.intersect}
             />
-            
-            {/* Botão de editar (verde) */}
+
             <View style={styles.editButton}>
-            <Feather name="edit-2" size={20} color="white" />
+              <Feather name="edit-2" size={20} color="white" />
             </View>
-        </TouchableOpacity>
+          </TouchableOpacity>
 
-        {/* Texto de boas-vindas */}
-        <Text style={styles.greeting}>Olá, Priscila!</Text>
-        <Text style={styles.subGreeting}>Complete seu perfil.</Text>
+          <Text style={styles.greeting}>Olá, Priscila!</Text>
+          <Text style={styles.subGreeting}>Complete seu perfil.</Text>
 
-        {/* Seção de Gênero */}
-        <Text style={styles.sectionLabel}>Gênero</Text>
+          <Text style={styles.sectionLabel}>Gênero</Text>
 
-        {/* Opções de gênero */}
-        <View style={styles.genderOptions}>
-            {/* Masculino */}
+          <View style={styles.genderOptions}>
             <TouchableOpacity
-            style={styles.genderOption}
-            onPress={() => setGender('masculino')}
+              style={styles.genderOption}
+              onPress={() => setGender('masculino')}
             >
-            <View style={[
-                styles.radioCircle,
-                gender === 'masculino' && styles.radioCircleSelected,
-            ]}>
-                {gender === 'masculino' && (
-                <Feather name="check" size={8} color={primaryColor} />
-                )}
-            </View>
-            <Text style={styles.genderText}>Masculino</Text>
+              <View
+                style={[
+                  styles.radioCircle,
+                  gender === 'masculino' && styles.radioCircleSelected,
+                ]}
+              />
+              <Text style={styles.genderText}>Masculino</Text>
             </TouchableOpacity>
 
-            {/* Feminino */}
             <TouchableOpacity
-            style={styles.genderOption}
-            onPress={() => setGender('feminino')}
+              style={styles.genderOption}
+              onPress={() => setGender('feminino')}
             >
-            <View style={[
-                styles.radioCircle,
-                gender === 'feminino' && styles.radioCircleSelected,
-            ]}>
-                {gender === 'feminino' && (
-                <Feather name="check" size={8} color={primaryColor} />
-                )}
-            </View>
-            <Text style={styles.genderText}>Feminino</Text>
+              <View
+                style={[
+                  styles.radioCircle,
+                  gender === 'feminino' && styles.radioCircleSelected,
+                ]}
+              />
+              <Text style={styles.genderText}>Feminino</Text>
             </TouchableOpacity>
 
-            {/* Outro */}
             <TouchableOpacity
-            style={styles.genderOption}
-            onPress={() => setGender('outro')}
+              style={styles.genderOption}
+              onPress={() => setGender('outro')}
             >
-            <View style={[
-                styles.radioCircle,
-                gender === 'outro' && styles.radioCircleSelected,
-            ]} />
-            <Text style={styles.genderText}>Outro</Text>
+              <View
+                style={[
+                  styles.radioCircle,
+                  gender === 'outro' && styles.radioCircleSelected,
+                ]}
+              />
+              <Text style={styles.genderText}>Outro</Text>
             </TouchableOpacity>
-        </View>
+          </View>
 
-        {/* Não informar (em linha separada) */}
-        <TouchableOpacity
+          {/* Não informar */}
+          <TouchableOpacity
             style={styles.genderOptionSingle}
             onPress={() => setGender('nao-informar')}
-        >
-            <View style={[
-            styles.radioCircle,
-            gender === 'nao-informar' && styles.radioCircleSelected,
-            ]} />
+          >
+            <View
+              style={[
+                styles.radioCircle,
+                gender === 'nao-informar' && styles.radioCircleSelected,
+              ]}
+            />
             <Text style={styles.genderText}>Não informar</Text>
-        </TouchableOpacity>
+          </TouchableOpacity>
 
-        {/* Seção de Descrição */}
-        <Text style={styles.descriptionLabel}>Descrição</Text>
+          <Text style={styles.descriptionLabel}>Descrição</Text>
 
-        <TextInput
+          <TextInput
             style={styles.descriptionInput}
             placeholder="Nos fale mais sobre você..."
-            placeholderTextColor="#9352b2"
+            placeholderTextColor={primaryColor}
             multiline
             numberOfLines={5}
             value={description}
             onChangeText={setDescription}
             textAlignVertical="top"
-        />
+          />
 
-        {/* Botão de Continuar (check roxo) */}
-        <TouchableOpacity 
-            style={styles.continueButton}
-            onPress={handleContinue}
-        >
+          <TouchableOpacity style={styles.continueButton} onPress={handleContinue}>
             <Feather name="check" size={21} color="white" />
-        </TouchableOpacity>
-
+          </TouchableOpacity>
         </View>
+      </ScrollView>
 
-    </ScrollView>
+      {/* MODAL */}
+      <Modal
+        transparent={true}
+        visible={modalVisible}
+        animationType="fade"
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalBox}>
+            <Text style={styles.modalText}>{modalMessage}</Text>
+
+            <TouchableOpacity
+              style={styles.modalButton}
+              onPress={() => setModalVisible(false)}
+            >
+              <Text style={styles.modalButtonText}>OK</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
-);
+  );
 }
 
 const styles = StyleSheet.create({
-safeArea: {
+  safeArea: {
     flex: 1,
     backgroundColor: '#ffffff',
-},
-container: {
+  },
+  container: {
     flexGrow: 1,
     alignItems: 'center',
     paddingVertical: 50,
-},
-frame: {
+  },
+  frame: {
     width: 265,
     position: 'relative',
-},
-imageContainer: {
+  },
+  imageContainer: {
     width: 224,
     height: 224,
     marginLeft: 16,
     marginTop: 30,
     position: 'relative',
-},
-intersect: {
+  },
+  intersect: {
     width: 224,
     height: 224,
     borderRadius: 112,
     resizeMode: 'cover',
-},
-editButton: {
+  },
+  editButton: {
     position: 'absolute',
     bottom: 0,
     right: 0,
@@ -188,115 +206,134 @@ editButton: {
     backgroundColor: secondaryColor,
     justifyContent: 'center',
     alignItems: 'center',
-},
-greeting: {
+  },
+  greeting: {
     position: 'absolute',
     top: 271,
-    left: 44,
+    left: 35,
     width: 204,
-    fontSize: 32,
+    fontSize: 26,
     fontWeight: '700',
     color: primaryColor,
-    letterSpacing: 0,
-    lineHeight: 38,
-},
-subGreeting: {
+    textAlign: 'center',
+  },
+  subGreeting: {
     position: 'absolute',
-    top: 314,
-    left: 58,
-    width: 147,
-    fontSize: 16,
-    fontWeight: '700',
+    top: 310,
+    left: 50,
+    width: 160,
+    fontSize: 14,
+    fontWeight: '600',
     color: primaryColor,
-    letterSpacing: 0,
-    lineHeight: 19,
-},
-sectionLabel: {
+    textAlign: 'center',
+  },
+  sectionLabel: {
     position: 'absolute',
-    top: 363,
+    top: 360,
     left: 10,
-    width: 183,
     fontSize: 16,
-    fontWeight: '400',
+    fontWeight: '500',
     color: '#000000',
-    letterSpacing: 0,
-    lineHeight: 19,
-},
-genderOptions: {
+  },
+  genderOptions: {
     position: 'absolute',
-    top: 394,
+    top: 390,
     left: 10,
     flexDirection: 'row',
-    gap: 20,
-},
-genderOption: {
+    gap: 18,
+  },
+  genderOption: {
     flexDirection: 'row',
     alignItems: 'center',
-},
-genderOptionSingle: {
+  },
+  genderOptionSingle: {
     position: 'absolute',
-    top: 423,
+    top: 420,
     left: 10,
     flexDirection: 'row',
     alignItems: 'center',
-},
-radioCircle: {
+  },
+  radioCircle: {
     width: 13,
     height: 13,
     borderRadius: 6.5,
     borderWidth: 1.5,
     borderColor: primaryColor,
     marginRight: 5,
-    justifyContent: 'center',
-    alignItems: 'center',
-},
-radioCircleSelected: {
+  },
+  radioCircleSelected: {
     backgroundColor: primaryColor,
-},
-genderText: {
+  },
+  genderText: {
     fontSize: 14,
     fontWeight: '500',
     color: '#000000',
-    letterSpacing: 0,
-    lineHeight: 16,
-},
-descriptionLabel: {
+  },
+  descriptionLabel: {
     position: 'absolute',
-    top: 463,
+    top: 460,
     left: 10,
     fontSize: 16,
-    fontWeight: '400',
+    fontWeight: '500',
     color: '#000000',
-    letterSpacing: 0,
-    lineHeight: 19,
-},
-descriptionInput: {
+  },
+  descriptionInput: {
     position: 'absolute',
-    top: 484,
+    top: 485,
     left: -2,
     width: 268,
-    height: 133,
+    height: 130,
     borderWidth: 2,
     borderColor: primaryColor,
-    borderRadius: 6,
+    borderRadius: 8,
     paddingHorizontal: 11,
     paddingTop: 9,
     fontSize: 14,
-    fontWeight: '700',
-    color: '#9352b2',
-    letterSpacing: 0,
-},
-continueButton: {
+    fontWeight: '600',
+    color: primaryColor,
+  },
+  continueButton: {
     position: 'absolute',
-    top: 647,
+    top: 650,
     left: 230,
-    width: 43,
-    height: 43,
-    borderRadius: 21.5,
-    borderWidth: 3,
-    borderColor: primaryColor,
+    width: 45,
+    height: 45,
+    borderRadius: 22.5,
     backgroundColor: primaryColor,
     justifyContent: 'center',
     alignItems: 'center',
-},
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.55)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalBox: {
+    width: 260,
+    padding: 20,
+    backgroundColor: 'white',
+    borderRadius: 16,
+    alignItems: 'center',
+  },
+  modalText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#000000',
+    textAlign: 'center',
+    marginBottom: 18,
+  },
+  modalButton: {
+    backgroundColor: secondaryColor,
+    paddingVertical: 10,
+    paddingHorizontal: 30,
+    borderRadius: 23, 
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '700',
+  },
 });

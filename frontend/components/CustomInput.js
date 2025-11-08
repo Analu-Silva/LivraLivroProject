@@ -2,9 +2,9 @@
 import React from 'react';
 import { View, Text, TextInput, StyleSheet, Image } from 'react-native';
 
-const primaryColor = '#B431F4'; // cor do texto/borda (seu original)
+const primaryColor = '#B431F4'; 
 const textColor = '#333333';
-const lightPurple = '#DAB8F7'; // placeholder
+const lightPurple = '#DAB8F7'; 
 
 export default function CustomInput({
   label = '',

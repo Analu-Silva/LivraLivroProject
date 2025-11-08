@@ -20,6 +20,8 @@ import MySellsScreen from "./screens/MySellsScreen";
 import SearchScreen from "./screens/SearchScreen";
 import MenuScreen from "./screens/MenuScreen";
 import SettingsScreen from "./screens/SettingsScreen";
+import FavScreen from "./screens/FavScreen";
+import MyOrdersScreen from "./screens/MyOrdersScreen";
 
 
 const primaryColor = "#B431F4";
@@ -32,7 +34,7 @@ function App() {
       <StatusBar style="light" backgroundColor={primaryColor} />
       <NavigationContainer>
         <Stack.Navigator
-          initialRouteName="Start"
+          initialRouteName="Register"
           screenOptions={{
             headerStyle: { backgroundColor: primaryColor },
             headerTintColor: "#fff",
@@ -48,6 +50,7 @@ function App() {
           <Stack.Screen
           name="PreHome"
           component={PreHomeScreen}
+          options={{ headerShown: false }}
           />
           <Stack.Screen
             name="Login"
@@ -67,6 +70,7 @@ function App() {
           <Stack.Screen 
             name="Home" 
             component={HomeScreen} 
+            options={{ headerShown: false }}
           />
           <Stack.Screen
             name="Menu"
@@ -92,6 +96,16 @@ function App() {
             name="Detalhes do Livro" 
             component={BookScreen} 
             options={{ headerShown: false  }} 
+          />
+          <Stack.Screen 
+            name="Favoritos" 
+            component={FavScreen} 
+            options={{ headerShown: false  }} 
+          />
+          <Stack.Screen
+            name="Pedidos"
+            component={MyOrdersScreen}
+            options={{ headerShown: false }}
           />
           <Stack.Screen 
             name="Procurar" 

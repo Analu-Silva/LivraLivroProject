@@ -1,204 +1,395 @@
 import React, { useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, ScrollView, StyleSheet } from "react-native";
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  ScrollView,
+  StyleSheet,
+} from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import BackButton from "../components/BackButton";
+
+const primaryPurple = "#B431F4";
 
 const AddSaleScreen = ({ navigation }) => {
   const [title, setTitle] = useState("");
   const [pages, setPages] = useState("");
   const [price, setPrice] = useState("");
   const [description, setDescription] = useState("");
+  const [status, setStatus] = useState("Usado");
+  const [showOptions, setShowOptions] = useState(false);
+  const [years, setYears] = useState("");
+  const [publisher, setPublisher] = useState("");
+  const [isbn, setIsbn] = useState("");
+  const [genres, setGenres] = useState([]);
+  const [showGenreMenu, setShowGenreMenu] = useState(false);
+
+  const genreOptions = [
+    "Ação",
+    "Romance",
+    "Drama",
+    "Fantasia",
+    "Terror",
+    "Suspense",
+    "Ficção Científica",
+    "Comédia",
+  ];
+
+  const addGenre = (genre) => {
+    if (!genres.includes(genre)) {
+      setGenres([...genres, genre]);
+    }
+  };
+
+  const removeGenre = (genre) => {
+    setGenres(genres.filter((g) => g !== genre));
+  };
 
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView
+      style={styles.container}
+      showsVerticalScrollIndicator={false}
+      contentContainerStyle={{ paddingBottom: 100 }}
+    >
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Ionicons name="arrow-back" size={26} color="#B431F4" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>VENDA</Text>
+        <BackButton onPress={() => navigation.goBack()} />
+        <Text style={styles.headerTitle}>Venda</Text>
       </View>
 
       {/* Fotos */}
+      <Text style={styles.labelPhoto}>Fotos</Text>
       <TouchableOpacity style={styles.photoBox}>
-        <Text style={styles.photoText}>+</Text>
+        <Ionicons name="add" size={45} color={primaryPurple} />
       </TouchableOpacity>
       <Text style={styles.photoNote}>Frente e verso são obrigatórios</Text>
 
-      {/* Campos */}
-      <TextInput
-        style={styles.input}
-        placeholder="Título"
-        value={title}
-        onChangeText={setTitle}
-      />
+      {/* Título */}
+      <Text style={styles.label}>Título</Text>
+      <TextInput style={styles.input} value={title} onChangeText={setTitle} />
 
+      {/* Gêneros literários */}
       <Text style={styles.label}>Gêneros literários</Text>
+
       <View style={styles.genreContainer}>
-        {["Crime", "Thriller", "Ação"].map((genre) => (
-          <TouchableOpacity key={genre} style={styles.genreButton}>
+        {genres.map((genre) => (
+          <View key={genre} style={styles.genreButton}>
             <Text style={styles.genreText}>{genre}</Text>
-          </TouchableOpacity>
+            <TouchableOpacity onPress={() => removeGenre(genre)}>
+              <Ionicons name="close" size={15} color={primaryPurple} />
+            </TouchableOpacity>
+          </View>
         ))}
-        <TouchableOpacity style={styles.addGenreButton}>
-          <Text style={styles.genreText}>+ Adicionar</Text>
+      </View>
+
+      <View style={{ position: "relative", marginBottom: 12 }}>
+        <TouchableOpacity
+          style={styles.dropdown}
+          onPress={() => setShowGenreMenu(!showGenreMenu)}
+          activeOpacity={0.8}
+        >
+          <Text style={styles.dropdownText}>
+            {showGenreMenu ? "Fechar menu" : "Selecionar gênero"}
+          </Text>
+          <Ionicons
+            name={showGenreMenu ? "chevron-up" : "chevron-down"}
+            size={16}
+            color={primaryPurple}
+          />
         </TouchableOpacity>
+
+        {showGenreMenu && (
+          <View style={styles.dropdownMenu}>
+            {genreOptions.map((option) => (
+              <TouchableOpacity
+                key={option}
+                style={styles.dropdownItem}
+                onPress={() => {
+                  addGenre(option);
+                  setShowGenreMenu(false);
+                }}
+              >
+                <Text
+                  style={[
+                    styles.dropdownItemText,
+                    genres.includes(option) && {
+                      color: primaryPurple,
+                      fontWeight: "600",
+                    },
+                  ]}
+                >
+                  {option}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        )}
       </View>
 
+      {/* Páginas e status */}
       <View style={styles.row}>
-        <TextInput
-          style={[styles.input, styles.rowInput]}
-          placeholder="Nº de páginas"
-          value={pages}
-          onChangeText={setPages}
-          keyboardType="numeric"
-        />
-        <TextInput
-          style={[styles.input, styles.rowInput]}
-          placeholder="Valor R$"
-          value={price}
-          onChangeText={setPrice}
-          keyboardType="numeric"
-        />
+        <View style={styles.half}>
+          <Text style={styles.label}>Nº de páginas</Text>
+          <TextInput
+            style={styles.input}
+            value={pages}
+            onChangeText={setPages}
+            keyboardType="numeric"
+          />
+        </View>
+
+        <View style={styles.half}>
+          <Text style={styles.label}>Status</Text>
+          <View style={{ position: "relative" }}>
+            <TouchableOpacity
+              style={styles.dropdown}
+              onPress={() => setShowOptions(!showOptions)}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.dropdownText}>{status}</Text>
+              <Ionicons name="chevron-down" size={16} color={primaryPurple} />
+            </TouchableOpacity>
+
+            {showOptions && (
+              <View style={styles.dropdownMenu}>
+                {["Usado", "Novo"].map((option) => (
+                  <TouchableOpacity
+                    key={option}
+                    style={styles.dropdownItem}
+                    onPress={() => {
+                      setStatus(option);
+                      setShowOptions(false);
+                    }}
+                  >
+                    <Text
+                      style={[
+                        styles.dropdownItemText,
+                        option === status && {
+                          fontWeight: "600",
+                          color: primaryPurple,
+                        },
+                      ]}
+                    >
+                      {option}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            )}
+          </View>
+        </View>
       </View>
 
+      {/* Valor e anos */}
+      <View style={styles.row}>
+        <View style={styles.half}>
+          <Text style={styles.label}>Valor</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="R$"
+            placeholderTextColor="#999"
+            value={price}
+            onChangeText={setPrice}
+            keyboardType="numeric"
+          />
+        </View>
+        <View style={styles.half}>
+          <Text style={styles.label}>Quantos anos?</Text>
+          <TextInput
+            style={styles.input}
+            value={years}
+            onChangeText={setYears}
+            keyboardType="numeric"
+          />
+        </View>
+      </View>
+
+      {/* Editora e ISBN */}
+      <View style={styles.row}>
+        <View style={styles.half}>
+          <Text style={styles.label}>Editora</Text>
+          <TextInput
+            style={styles.input}
+            value={publisher}
+            onChangeText={setPublisher}
+          />
+        </View>
+
+        <View style={styles.half}>
+          <Text style={styles.label}>ISBN</Text>
+          <TextInput
+            style={styles.input}
+            value={isbn}
+            onChangeText={setIsbn}
+          />
+        </View>
+      </View>
+
+      {/* Descrição */}
+      <Text style={styles.label}>Descrição</Text>
       <TextInput
         style={[styles.input, { height: 100 }]}
-        placeholder="Descrição"
+        multiline
+        placeholder="Nos fale mais sobre..."
+        placeholderTextColor="#999"
         value={description}
         onChangeText={setDescription}
-        multiline
       />
 
-      {/* Entrega */}
-      <View style={styles.deliveryContainer}>
-        <TouchableOpacity style={styles.checkbox}>
-          <Ionicons name="checkmark" size={16} color="#B431F4" />
-        </TouchableOpacity>
-        <Text style={styles.deliveryText}>Selecionar Biblioteca</Text>
-      </View>
-
-      {/* Botão adicionar */}
-      <TouchableOpacity style={styles.addButton}>
-        <Text style={styles.addButtonText}>Adicionar</Text>
+      {/* Botão principal */}
+      <TouchableOpacity style={styles.registerButton}>
+        <Text style={styles.registerText}>Registrar venda</Text>
       </TouchableOpacity>
     </ScrollView>
   );
 };
 
+export default AddSaleScreen;
+
 const styles = StyleSheet.create({
-  container: { 
-    flex: 1, 
-    backgroundColor: "#fff", 
+  container: {
+    flex: 1,
+    backgroundColor: "#FFF",
     paddingHorizontal: 20, 
-    paddingTop: 15 
+    paddingTop: 20, 
   },
-  header: { 
-    flexDirection: "row", 
-    alignItems: "center", 
-    gap: 15, 
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
     marginTop: 30,
-    marginBottom: 20 
+    marginBottom: 10,
   },
-  headerTitle: { 
-    fontSize: 16, 
-    fontWeight: "bold", 
-    color: "#B431F4" 
+  headerTitle: {
+    fontSize: 24,
+    fontWeight: "700",
+    color: primaryPurple,
+    marginLeft: 10,
   },
-  photoBox: { 
-    width: 100, 
-    height: 100, 
-    borderWidth: 1, 
-    borderColor: "#B431F4", 
-    borderRadius: 12, 
-    justifyContent: "center", 
-    alignItems: "center", 
-    marginBottom: 5 
+  labelPhoto: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#3d3d3dff",
+    marginBottom: 5,
+    alignSelf: "center",
   },
-  photoText: { 
-    fontSize: 24, 
-    color: "#B431F4", 
-    fontWeight: "bold" 
+  photoBox: {
+    borderWidth: 2,
+    borderColor: primaryPurple,
+    borderStyle: "dashed",
+    borderRadius: 15,
+    alignItems: "center",
+    justifyContent: "center",
+    width: 145,
+    height: 139,
+    marginVertical: 10,
+    alignSelf: "center",
   },
-  photoNote: { 
-    fontSize: 12, 
-    color: "#777", 
-    marginBottom: 15 
+  photoNote: {
+    marginTop: 6,
+    marginBottom: 18,
+    color: "#312e2eff",
+    fontSize: 12,
+    alignSelf: "center",
   },
-  input: { 
-    borderWidth: 1, 
-    borderColor: "#B431F4", 
-    borderRadius: 12, 
-    padding: 10, 
-    marginBottom: 10 
+  label: {
+    fontWeight: "600",
+    fontSize: 16,
+    color: "#333",
+    marginBottom: 5,
+    marginTop: 10,
   },
-  label: { 
-    fontSize: 14, 
-    fontWeight: "600", 
-    marginBottom: 5 
+  input: {
+    borderWidth: 1,
+    borderColor: primaryPurple,
+    borderRadius: 20,
+    paddingHorizontal: 15,
+    paddingVertical: 10,
+    marginBottom: 12,
+    fontSize: 16,
+    color: "#000",
   },
-  genreContainer: { 
-    flexDirection: "row", 
-    flexWrap: "wrap", 
-    marginBottom: 15, 
-    gap: 8 
+  genreContainer: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+    marginBottom: 10,
   },
-  genreButton: { 
-    borderWidth: 1, 
-    borderColor: "#B431F4", 
-    borderRadius: 12, 
-    paddingVertical: 5, 
-    paddingHorizontal: 10 
+  genreButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: primaryPurple,
+    borderRadius: 20,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    marginRight: 5,
+    marginBottom: 5,
   },
-  addGenreButton: { 
-    borderWidth: 1, 
-    borderColor: "#B431F4", 
-    borderRadius: 12, 
-    paddingVertical: 5, 
-    paddingHorizontal: 10 
+  genreText: {
+    color: primaryPurple,
+    fontWeight: "600",
+    marginRight: 5,
   },
-  genreText: { 
-    color: "#B431F4", 
-    fontWeight: "600" 
+  dropdown: {
+    borderWidth: 1,
+    borderColor: primaryPurple,
+    borderRadius: 20,
+    paddingHorizontal: 15,
+    paddingVertical: 10,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
   },
-  row: { 
-    flexDirection: "row", 
-    justifyContent: "space-between", 
-    marginBottom: 10 
+  dropdownText: {
+    fontSize: 16,
+    color: "#000",
   },
-  rowInput: { 
-    flex: 1, 
-    marginRight: 10 
+  dropdownMenu: {
+    position: "absolute",
+    top: 50,
+    width: "100%",
+    backgroundColor: "#FFF",
+    borderRadius: 15,
+    borderWidth: 1,
+    borderColor: primaryPurple,
+    zIndex: 10,
+    elevation: 5,
+    shadowColor: "#000",
+    shadowOpacity: 0.1,
+    shadowRadius: 5,
+    shadowOffset: { width: 0, height: 2 },
   },
-  deliveryContainer: { 
-    flexDirection: "row", 
-    alignItems: "center", 
-    marginBottom: 20 
+  dropdownItem: {
+    paddingVertical: 10,
+    paddingHorizontal: 15,
   },
-  checkbox: { 
-    width: 20,
-    height: 20, 
-    borderWidth: 1, 
-    borderColor: "#B431F4", 
-    borderRadius: 4, 
-    justifyContent: "center", 
-    alignItems: "center", 
-    marginRight: 10 
+  dropdownItemText: {
+    color: "#000",
+    fontSize: 15,
   },
-  deliveryText: { 
-    color: "#333" 
+  row: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    gap: 10,
   },
-  addButton: { 
-    backgroundColor: "#B431F4", 
-    borderRadius: 12, 
-    paddingVertical: 15, 
-    alignItems: "center", 
-    marginBottom: 40 
+  half: {
+    flex: 1,
   },
-  addButtonText: { 
-    color: "#FFF", 
-    fontSize: 16, 
-    fontWeight: "bold" 
+  registerButton: {
+    backgroundColor: primaryPurple,
+    borderRadius: 30,
+    paddingVertical: 10,
+    alignItems: "center",
+    justifyContent: "center",
+    width: 160,
+    alignSelf: "center",
+    marginTop: 20,
+    marginBottom: 10,
+  },
+  registerText: {
+    color: "#FFF",
+    fontWeight: "bold",
+    fontSize: 16,
   },
 });
-
-export default AddSaleScreen;
