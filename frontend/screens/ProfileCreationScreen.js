@@ -11,6 +11,11 @@ import {
   Modal,
 } from 'react-native';
 import { Feather } from '@expo/vector-icons';
+import { createProfileDetails } from '../services/profileService';
+import { ActivityIndicator } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useFocusEffect } from '@react-navigation/native'; //caso precise usar
+
 
 const primaryColor = '#B431F4';
 const secondaryColor = '#a4dc22ff';
@@ -19,9 +24,24 @@ export default function ProfileCreationScreen({ navigation }) {
   const [profileImage, setProfileImage] = useState(null);
   const [gender, setGender] = useState('');
   const [description, setDescription] = useState('');
-
+  const [loading, setLoading] = useState(false);
+  const [userName, setUserName] = useState('Usuário');
   const [modalVisible, setModalVisible] = useState(false);
   const [modalMessage, setModalMessage] = useState('');
+
+  React.useEffect(() => {
+    const loadUserName = async () => {
+      try {
+        const name = await AsyncStorage.getItem('userName');
+        if (name) {
+          setUserName(name);
+        }
+      } catch (error) {
+        console.error('Erro ao carregar nome:', error);
+      }
+    };
+    loadUserName();
+  }, []);
 
   const openModal = (msg) => {
     setModalMessage(msg);
@@ -32,11 +52,37 @@ export default function ProfileCreationScreen({ navigation }) {
     openModal('Funcionalidade de escolher foto será implementada.');
   };
 
-  const handleContinue = () => {
-    if (!gender) {
-      openModal('Por favor, selecione seu gênero.');
-      return;
-    }
+const handleContinue = async () => {
+  if (!gender) {
+    openModal('Por favor, selecione seu gênero.');
+    return;
+  }
+
+  // Pega o userId que vem da tela RegisterScreen
+  const userId = route?.params?.userId;
+  
+  if (!userId) {
+    openModal('Erro: userId não encontrado. Por favor, tente se registrar novamente.');
+    return;
+  }
+
+  setLoading(true);
+  try {
+    const genderMap = {
+      'masculino': 1,
+      'feminino': 2,
+      'outro': 3,
+      'nao-informar': 3,
+    };
+
+    const detailsData = {
+      userImageUrl: profileImage || '',
+      userGenreId: genderMap[gender] || 3,
+      description: description || '',
+    };
+
+    const response = await createProfileDetails(userId, detailsData);
+    console.log('Detalhes do perfil criados:', response);
 
     openModal('Perfil criado com sucesso!');
 
@@ -44,7 +90,14 @@ export default function ProfileCreationScreen({ navigation }) {
       setModalVisible(false);
       navigation.navigate('Home');
     }, 1200);
-  };
+
+  } catch (error) {
+    openModal('Erro ao criar perfil: ' + (error.message || 'Tente novamente'));
+    console.error('Erro:', error);
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -67,7 +120,7 @@ export default function ProfileCreationScreen({ navigation }) {
             </View>
           </TouchableOpacity>
 
-          <Text style={styles.greeting}>Olá, Priscila!</Text>
+          <Text style={styles.greeting}>Olá, {userName}!</Text>
           <Text style={styles.subGreeting}>Complete seu perfil.</Text>
 
           <Text style={styles.sectionLabel}>Gênero</Text>
@@ -140,8 +193,16 @@ export default function ProfileCreationScreen({ navigation }) {
             textAlignVertical="top"
           />
 
-          <TouchableOpacity style={styles.continueButton} onPress={handleContinue}>
-            <Feather name="check" size={21} color="white" />
+          <TouchableOpacity
+            style={[styles.continueButton, loading && styles.disabledButton]}
+            disabled={loading}
+            onPress={handleContinue}
+          >
+            {loading ? (
+              <ActivityIndicator color="white" />
+            ) : (
+              <Feather name="check" size={21} color="white" />
+            )}
           </TouchableOpacity>
         </View>
       </ScrollView>

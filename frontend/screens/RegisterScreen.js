@@ -13,6 +13,9 @@ import {
 import { Feather } from '@expo/vector-icons';
 import CustomInput from '../components/CustomInput';
 import BackButton from '../components/BackButton'; 
+import { signup } from '../services/authService';
+import { ActivityIndicator } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // cores
 const primaryColor = '#B431F4';
@@ -183,12 +186,14 @@ const modalStyles = StyleSheet.create({
 
 export default function RegisterScreen({ navigation }) {
   const [step, setStep] = useState(1);
+  const [name, setName] = useState(''); 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [cpf, setCpf] = useState('');
   const [phone, setPhone] = useState('');
   const [birthDate, setBirthDate] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const [isPasswordSectionFocused, setIsPasswordSectionFocused] = useState(false);
   const [showAgeRestrictionModal, setShowAgeRestrictionModal] = useState(false);
@@ -266,17 +271,47 @@ export default function RegisterScreen({ navigation }) {
     return age < 12;
   };
 
-  const handleRegister = () => {
-    if (!canCreateAccountButton) {
-      Alert.alert('Erro de Validação', 'Por favor, preencha todos os campos corretamente.');
-      return;
-    }
-    if (isUnderage()) {
-      setShowAgeRestrictionModal(true);
-      return;
-    }
-    navigation.navigate('ProfileCreation');
-  };
+const handleRegister = async () => {
+  if (!canCreateAccountButton) {
+    Alert.alert('Erro de Validação', 'Por favor, preencha todos os campos corretamente.');
+    return;
+  }
+  if (isUnderage()) {
+    setShowAgeRestrictionModal(true);
+    return;
+  }
+
+  setLoading(true);
+  try {
+    const cleanCpf = cpf.replace(/\D/g, '');
+    const cleanPhone = phone.replace(/\D/g, '');
+    const [dia, mes, ano] = birthDate.split('/');
+    const formattedDate = `${ano}-${mes}-${dia}`;
+
+    const userData = {
+      name: name,
+      email: email,
+      password: password,
+      cpf: cleanCpf,
+      phoneNumber: cleanPhone,
+      dateOfBirth: formattedDate,
+    };
+
+    const response = await signup(userData);
+    console.log('Cadastro bem-sucedido:', response);
+    
+    Alert.alert('Sucesso', 'Cadastro realizado com sucesso!');
+    await AsyncStorage.setItem('userName', name);
+    // Passar o userId para a próxima tela se vier na resposta
+    navigation.navigate('ProfileCreation', { userId: response.id });
+    
+  } catch (error) {
+    Alert.alert('Erro no Cadastro', error.message || 'Ocorreu um erro ao criar a conta');
+    console.error('Erro:', error);
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -373,6 +408,15 @@ export default function RegisterScreen({ navigation }) {
 
         {step === 2 && (
           <View style={styles.formArea}>
+            <CustomInput
+              label="Nome Completo"
+              value={name}
+              onChangeText={setName}
+              placeholder="Seu nome completo"
+              showValidationIcon={true}
+              isValid={name.length > 2}
+            />
+
             {/* CPF — com ícone */}
             <CustomInput
               label="CPF"
@@ -411,16 +455,23 @@ export default function RegisterScreen({ navigation }) {
 
             {/* BOTÃO CRIAR CONTA */}
             <TouchableOpacity
-              style={[styles.continueButton, !canCreateAccountButton && styles.disabledButton]}
-              disabled={!canCreateAccountButton}
+              style={[styles.continueButton, (!canCreateAccountButton || loading) && styles.disabledButton]}
+              disabled={!canCreateAccountButton || loading}
               onPress={handleRegister}
             >
-              <Text style={styles.continueButtonText}>Criar Conta</Text>
+              {loading ? (
+                <ActivityIndicator color="#FFF" />
+              ) : (
+                <Text style={styles.continueButtonText}>Criar Conta</Text>
+              )}
             </TouchableOpacity>
           </View>
         )}
 
-        <AgeRestrictionModal visible={showAgeRestrictionModal} onClose={() => setShowAgeRestrictionModal(false)} />
+        <AgeRestrictionModal 
+          visible={showAgeRestrictionModal} 
+          onClose={() => setShowAgeRestrictionModal(false)} 
+        />
       </ScrollView>
     </SafeAreaView>
   );
@@ -443,7 +494,7 @@ const styles = StyleSheet.create({
   passwordInputGroup: { width: '100%', position: 'relative', marginBottom: 10 },
   passwordRequirementsContainer: { width: '85%', alignSelf: 'center', marginBottom: 20, marginTop: 10 },
   continueButton: { width: '85%', height: 50, backgroundColor: primaryColor, justifyContent: 'center', alignItems: 'center', borderRadius: 25, marginTop: 20 },
-   continueButtonText: {
+  continueButtonText: {
     color: '#FFF',
     fontSize: 16,
     fontWeight: '700',

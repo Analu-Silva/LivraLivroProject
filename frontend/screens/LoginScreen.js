@@ -10,6 +10,8 @@ import {
 } from "react-native";
 import CustomInput from "../components/CustomInput";
 import BackButton from "../components/BackButton";
+import { signin } from '../services/authService';
+import { Alert, ActivityIndicator } from 'react-native';
 
 const primaryColor = "#B431F4";
 
@@ -19,9 +21,29 @@ const isValidEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 export default function LoginScreen({ navigation }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const emailIsValid = isValidEmail(email);
   const passwordIsValid = password.length >= 8;
+
+    const handleLogin = async () => {
+    if (!emailIsValid || !passwordIsValid) {
+      Alert.alert('Erro', 'Por favor, preencha todos os campos corretamente.');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const response = await signin(email, password);
+      console.log('Login bem-sucedido:', response);
+      // Função que salvaria o userId em algum lugar (AsyncStorage depois)
+      navigation.navigate("Home");
+    } catch (error) {
+      Alert.alert('Erro no Login', error.message || 'Email ou senha inválidos');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -81,7 +103,7 @@ export default function LoginScreen({ navigation }) {
             onPress={() => navigation.navigate("Home")}
             disabled={!emailIsValid || !passwordIsValid}
           >
-            <Text style={styles.loginButtonText}>Log in</Text>
+            <Text style={styles.loginButtonText}>Logar</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
