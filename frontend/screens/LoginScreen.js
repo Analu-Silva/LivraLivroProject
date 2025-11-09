@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -7,41 +7,45 @@ import {
   Image,
   SafeAreaView,
   ScrollView,
-} from 'react-native';
-import CustomInput from '../components/CustomInput';
+} from "react-native";
+import CustomInput from "../components/CustomInput";
 import BackButton from "../components/BackButton";
 
-const primaryColor = '#B431F4';
+const primaryColor = "#B431F4";
 
-// função simples de validação de e-mail
+// Validação simples de e-mail
 const isValidEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
 export default function LoginScreen({ navigation }) {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
 
-  // validações
   const emailIsValid = isValidEmail(email);
   const passwordIsValid = password.length >= 8;
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <ScrollView contentContainerStyle={styles.container}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: 80 }}
+      >
+        {/* HEADER */}
         <View style={styles.header}>
-          <BackButton onPress={() => navigation.navigate('Register')} />
+          <BackButton onPress={() => navigation.navigate("Register")} />
           <Text style={styles.title}>Login</Text>
         </View>
 
+        {/* LOGO */}
         <View style={styles.logoContainer}>
           <Image
-            source={require('../assets/logo.png')}
+            source={require("../assets/logo.png")}
             style={styles.logo}
             resizeMode="contain"
           />
         </View>
 
+        {/* FORM */}
         <View style={styles.formArea}>
-          {/* EMAIL */}
           <CustomInput
             label="Email"
             placeholder="Insira seu e-mail"
@@ -52,7 +56,6 @@ export default function LoginScreen({ navigation }) {
             isValid={email.length === 0 || emailIsValid}
           />
 
-          {/* SENHA */}
           <CustomInput
             label="Senha"
             placeholder="Insira sua senha"
@@ -65,7 +68,7 @@ export default function LoginScreen({ navigation }) {
 
           <TouchableOpacity
             style={styles.forgotPasswordButton}
-            onPress={() => console.log('Esqueceu a senha?')}
+            onPress={() => console.log("Esqueceu a senha?")}
           >
             <Text style={styles.forgotPasswordText}>Esqueceu sua senha?</Text>
           </TouchableOpacity>
@@ -75,7 +78,7 @@ export default function LoginScreen({ navigation }) {
               styles.loginButton,
               (!emailIsValid || !passwordIsValid) && styles.disabledButton,
             ]}
-            onPress={() => navigation.navigate('Home')}
+            onPress={() => navigation.navigate("Home")}
             disabled={!emailIsValid || !passwordIsValid}
           >
             <Text style={styles.loginButtonText}>Log in</Text>
@@ -89,61 +92,56 @@ export default function LoginScreen({ navigation }) {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#FFF',
-  },
-  container: {
-    alignItems: 'center',
-    paddingVertical: 20,
-    paddingHorizontal: 20,
+    backgroundColor: "#FFF",
   },
   header: {
-    width: '100%',
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginTop: 30,
-    marginBottom: 10,
-    paddingHorizontal: 5,
+    marginBottom: 5,
+    paddingHorizontal: 20, 
   },
   title: {
-    fontSize: 26,
-    fontWeight: '600',
+    fontSize: 24,
+    fontWeight: "700",
     color: primaryColor,
-    textAlign: 'center',
-    paddingLeft: 15,
+    marginLeft: 10,
   },
   logoContainer: {
-    marginVertical: 20,
+    alignItems: "center",
+    marginVertical: 25,
   },
   logo: {
-    width: 120,
-    height: 120,
+    width: 130,
+    height: 130,
   },
   formArea: {
-    width: '100%',
-    alignItems: 'center',
+    width: "100%",
+    paddingHorizontal: 20, 
   },
   forgotPasswordButton: {
-    alignSelf: 'flex-start',
-    marginBottom: 30,
-    marginLeft: '8%',
+    alignSelf: "flex-start",
+    paddingHorizontal: 30, 
+    marginTop: 5,
+    marginBottom: 25,
   },
   forgotPasswordText: {
-    fontSize: 14,
-    color: '#111111ff',
+    fontSize: 15,
+    color: "#111",
   },
   loginButton: {
-    width: '85%',
-    height: 50,
     backgroundColor: primaryColor,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderRadius: 25,
-    marginTop: 10,
+    borderRadius: 30,
+    paddingVertical: 12,
+    alignItems: "center",
+    justifyContent: "center",
+    width: "65%",
+    alignSelf: "center",
   },
   loginButtonText: {
-    color: '#FFF',
+    color: "#FFF",
     fontSize: 16,
-    fontWeight: '700',
+    fontWeight: "700",
   },
   disabledButton: {
     opacity: 0.5,

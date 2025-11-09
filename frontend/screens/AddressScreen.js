@@ -1,108 +1,172 @@
 import React, { useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  ScrollView,
+  StyleSheet,
+} from "react-native";
+import BackButton from "../components/BackButton";
 
-export default function AddressScreen({ navigation }) {
+const primaryPurple = "#B431F4";
+
+const AddressScreen = ({ navigation }) => {
   const [cep, setCep] = useState("");
-  const [cidade, setCidade] = useState("");
-  const [bairro, setBairro] = useState("");
-  const [rua, setRua] = useState("");
-  const [numero, setNumero] = useState("");
-  const [complemento, setComplemento] = useState("");
-
-  const handleConfirm = () => {
-    const endereco = { cep, cidade, bairro, rua, numero, complemento };
-    console.log("Endereço atualizado:", endereco);
-    navigation.goBack(); 
-  };
+  const [street, setStreet] = useState("");
+  const [number, setNumber] = useState("");
+  const [complement, setComplement] = useState("");
+  const [city, setCity] = useState("");
+  const [state, setState] = useState("");
 
   return (
-    <ScrollView style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Ionicons name="arrow-back" size={26} color="#B431F4" />
+    <View style={styles.container}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: 100 }}
+      >
+        {/* Header */}
+        <View style={styles.header}>
+          <BackButton onPress={() => navigation.goBack()} />
+          <Text style={styles.headerTitle}>Endereço de entrega</Text>
+        </View>
+
+        {/* CEP */}
+        <View style={styles.section}>
+          <Text style={styles.label}>CEP</Text>
+          <TextInput
+            style={styles.input}
+            value={cep}
+            onChangeText={setCep}
+            keyboardType="numeric"
+          />
+        </View>
+
+        {/* Rua */}
+        <View style={styles.section}>
+          <Text style={styles.label}>Rua</Text>
+          <TextInput
+            style={styles.input}
+            value={street}
+            onChangeText={setStreet}
+          />
+        </View>
+
+        {/* Número e Complemento */}
+        <View style={[styles.row, styles.section]}>
+          <View style={styles.half}>
+            <Text style={styles.label}>Número</Text>
+            <TextInput
+              style={styles.input}
+              value={number}
+              onChangeText={setNumber}
+              keyboardType="numeric"
+            />
+          </View>
+          <View style={styles.half}>
+            <Text style={styles.label}>Complemento</Text>
+            <TextInput
+              style={styles.input}
+              value={complement}
+              onChangeText={setComplement}
+            />
+          </View>
+        </View>
+
+        {/* Cidade e Estado */}
+        <View style={[styles.row, styles.section]}>
+          <View style={styles.half}>
+            <Text style={styles.label}>Cidade</Text>
+            <TextInput
+              style={styles.input}
+              value={city}
+              onChangeText={setCity}
+            />
+          </View>
+          <View style={styles.half}>
+            <Text style={styles.label}>Estado</Text>
+            <TextInput
+              style={styles.input}
+              value={state}
+              onChangeText={setState}
+            />
+          </View>
+        </View>
+
+        {/* Botão */}
+        <TouchableOpacity style={styles.saveButton}>
+          <Text style={styles.saveText}>Salvar Endereço</Text>
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Endereço de entrega</Text>
-      </View>
-
-      {/* Formulário */}
-      <TextInput
-        style={styles.input}
-        placeholder="CEP"
-        value={cep}
-        onChangeText={setCep}
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Cidade"
-        value={cidade}
-        onChangeText={setCidade}
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Bairro"
-        value={bairro}
-        onChangeText={setBairro}
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Rua"
-        value={rua}
-        onChangeText={setRua}
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Número"
-        value={numero}
-        onChangeText={setNumero}
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Complemento"
-        value={complemento}
-        onChangeText={setComplemento}
-      />
-
-      {/* Botão confirmar */}
-      <TouchableOpacity style={styles.confirmButton} onPress={handleConfirm}>
-        <Text style={styles.confirmText}>Confirmar</Text>
-      </TouchableOpacity>
-    </ScrollView>
+      </ScrollView>
+    </View>
   );
-}
+};
+
+export default AddressScreen;
 
 const styles = StyleSheet.create({
-  container: { 
-    flex: 1, 
-    backgroundColor: "#fff", 
-    padding: 20 
+  container: {
+    flex: 1,
+    backgroundColor: "#FFF",
+    paddingTop: 20, 
   },
-  header: { 
-    flexDirection: "row", 
-    alignItems: "center", 
-    marginTop: 30,
-    marginBottom: 20, 
-    gap: 15 
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: 30, 
+    marginBottom: 20,
+    paddingHorizontal: 20, 
   },
-  headerTitle: { 
-    fontSize: 16, 
-    fontWeight: "bold", 
-    color: "#B431F4" 
+  headerTitle: {
+    fontSize: 24,
+    fontWeight: "700",
+    color: primaryPurple,
+    marginLeft: 10,
+  },
+
+  section: {
+    marginHorizontal: 20, 
+  },
+  label: {
+    fontWeight: "600",
+    fontSize: 16,
+    color: "#333",
+    marginBottom: 5,
+    marginTop: 10,
+    paddingLeft: 10, 
   },
   input: {
     borderWidth: 1,
-    borderColor: "#B431F4",
-    borderRadius: 12,
-    padding: 12,
-    marginBottom: 15,
+    borderColor: primaryPurple,
+    borderRadius: 20,
+    paddingHorizontal: 15,
+    paddingVertical: 10,
+    marginBottom: 12,
+    fontSize: 16,
+    color: "#000",
   },
-  confirmButton: {
-    backgroundColor: "#B431F4",
-    borderRadius: 12,
-    paddingVertical: 15,
+  row: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    gap: 10,
+  },
+  half: {
+    flex: 1,
+  },
+  saveButton: {
+    backgroundColor: primaryPurple,
+    borderRadius: 30,
+    paddingVertical: 10,
     alignItems: "center",
-    marginTop: 10,
+    justifyContent: "center",
+    width: 160,
+    alignSelf: "center",
+    marginTop: 20,
+    marginBottom: 10,
   },
-  confirmText: { color: "#fff", fontWeight: "bold", fontSize: 16 },
+  saveText: {
+    color: "#FFF",
+    fontWeight: "bold",
+    fontSize: 16,
+  },
 });

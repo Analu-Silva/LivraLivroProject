@@ -4,8 +4,8 @@ import { View, Image, StyleSheet, SafeAreaView } from 'react-native';
 export default function StartScreen({ navigation }) {
   useEffect(() => {
     const timer = setTimeout(() => {
-      navigation.replace('PreHome'); // ← Vai para PreHome (que tem o modal)
-    }, 2500); // 2.5 segundos
+      navigation.replace('PreHome'); 
+    }, 2500); 
 
     return () => clearTimeout(timer);
   }, [navigation]);

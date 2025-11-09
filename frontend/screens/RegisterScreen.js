@@ -16,7 +16,7 @@ import BackButton from '../components/BackButton';
 
 // cores
 const primaryColor = '#B431F4';
-const secundaryColor = '#A8F000';
+const secundaryColor = '#a4dc22ff';
 const textColor = '#333333';
 
 // validações
@@ -134,22 +134,6 @@ const AgeRestrictionModal = ({ visible, onClose }) => (
   </Modal>
 );
 
-const SuccessModal = ({ visible, onClose, onConfirm }) => (
-  <Modal animationType="fade" transparent visible={visible} onRequestClose={onClose}>
-    <View style={modalStyles.overlay}>
-      <View style={modalStyles.modalBox}>
-        <Text style={modalStyles.modalMessage}>Sua conta foi criada com sucesso!</Text>
-        <TouchableOpacity
-          style={[modalStyles.modalButton, { backgroundColor: secundaryColor }]}
-          onPress={onConfirm}
-        >
-          <Text style={modalStyles.modalButtonText}>Ok</Text>
-        </TouchableOpacity>
-      </View>
-    </View>
-  </Modal>
-);
-
 const modalStyles = StyleSheet.create({
   overlay: { 
     flex: 1,
@@ -208,7 +192,6 @@ export default function RegisterScreen({ navigation }) {
 
   const [isPasswordSectionFocused, setIsPasswordSectionFocused] = useState(false);
   const [showAgeRestrictionModal, setShowAgeRestrictionModal] = useState(false);
-  const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
@@ -292,11 +275,6 @@ export default function RegisterScreen({ navigation }) {
       setShowAgeRestrictionModal(true);
       return;
     }
-    setShowSuccessModal(true);
-  };
-
-  const handleSuccessModalConfirm = () => {
-    setShowSuccessModal(false);
     navigation.navigate('ProfileCreation');
   };
 
@@ -443,7 +421,6 @@ export default function RegisterScreen({ navigation }) {
         )}
 
         <AgeRestrictionModal visible={showAgeRestrictionModal} onClose={() => setShowAgeRestrictionModal(false)} />
-        <SuccessModal visible={showSuccessModal} onClose={() => setShowSuccessModal(false)} onConfirm={handleSuccessModalConfirm} />
       </ScrollView>
     </SafeAreaView>
   );
@@ -452,7 +429,7 @@ export default function RegisterScreen({ navigation }) {
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: '#FFF' },
   container: { alignItems: 'center', paddingVertical: 20, paddingHorizontal: 20 },
-  header: { width: '100%', flexDirection: 'row', alignItems: 'center', marginTop: 30, marginBottom: 10, paddingHorizontal: 5 },
+  header: { width: '100%', flexDirection: 'row', alignItems: 'center', marginTop: 5, marginBottom: 10, paddingHorizontal: 5 },
   backButton: { marginRight: 15 },
   title: {  fontSize: 26,
     fontWeight: '600',

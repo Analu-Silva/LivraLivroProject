@@ -1,6 +1,16 @@
 import React, { useState } from "react";
-import { View, TextInput, FlatList, Text, TouchableOpacity, StyleSheet } from "react-native";
+import {
+  View,
+  Text,
+  TextInput,
+  FlatList,
+  TouchableOpacity,
+  StyleSheet,
+} from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import BackButton from "../components/BackButton";
+
+const primaryPurple = "#B431F4";
 
 export default function SearchScreen({ navigation }) {
   const [query, setQuery] = useState("");
@@ -19,61 +29,108 @@ export default function SearchScreen({ navigation }) {
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Ionicons name="arrow-back" size={26} color="#B431F4" />
-        </TouchableOpacity>
-        <TextInput
-          style={styles.input}
-          placeholder="Pesquisar livros..."
-          value={query}
-          onChangeText={setQuery}
-        />
+        <BackButton onPress={() => navigation.goBack()} />
+        <Text style={styles.headerTitle}>Pesquisar</Text>
       </View>
 
-      {/* Lista de resultados */}
+      {/* Campo de pesquisa */}
+      <TextInput
+        style={styles.input}
+        placeholder="Pesquisar livros..."
+        placeholderTextColor="#999"
+        value={query}
+        onChangeText={setQuery}
+      />
+
+      {/* Resultados */}
       <FlatList
         data={filtered}
         keyExtractor={(item) => item.id.toString()}
+        contentContainerStyle={styles.listContainer}
         renderItem={({ item }) => (
           <TouchableOpacity
-            style={styles.resultItem}
+            style={styles.card}
             onPress={() => console.log("Selecionou:", item.title)}
           >
-            <Text style={styles.resultText}>{item.title}</Text>
+            <View style={styles.cardContent}>
+              <Ionicons
+                name="book-outline"
+                size={22}
+                color={primaryPurple}
+                style={{ marginRight: 10 }}
+              />
+              <Text style={styles.resultText}>{item.title}</Text>
+            </View>
           </TouchableOpacity>
         )}
+        ListEmptyComponent={
+          <Text style={styles.emptyText}>Nenhum livro encontrado.</Text>
+        }
       />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { 
-    flex: 1, 
-    backgroundColor: "#fff", 
-    padding: 20 
-  },
-  header: { 
-    flexDirection: "row", 
-    alignItems: "center", 
-    marginTop: 30,
-    marginBottom: 20, 
-    gap: 10 },
-  input: {
+  container: {
     flex: 1,
+    backgroundColor: "#FFF",
+    paddingHorizontal: 25,
+  },
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: 30,
+    marginBottom: 15,
+  },
+  headerTitle: {
+    fontSize: 22,
+    fontWeight: "700",
+    color: primaryPurple,
+    marginLeft: 10,
+  },
+  input: {
     borderWidth: 1,
-    borderColor: "#B431F4",
-    borderRadius: 12,
+    borderColor: primaryPurple,
+    borderRadius: 20,
     paddingHorizontal: 15,
     paddingVertical: 10,
+    fontSize: 16,
+    color: "#000",
+    marginBottom: 20,
   },
-  resultItem: {
-    padding: 15,
-    borderBottomWidth: 1,
-    borderBottomColor: "#EEE",
+  listContainer: {
+    paddingBottom: 30,
   },
-  resultText: { 
-    fontSize: 16, 
-    color: "#333" 
+  card: {
+    backgroundColor: "#FFF",
+    borderRadius: 15,
+    paddingVertical: 12,
+    paddingHorizontal: 15,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: "#eee",
+    flexDirection: "row",
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOpacity: 0.05,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 4,
+    elevation: 1,
+  },
+  cardContent: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  resultText: {
+    fontSize: 16,
+    color: "#333",
+    fontWeight: "500",
+  },
+  emptyText: {
+    textAlign: "center",
+    color: "#999",
+    marginTop: 20,
+    fontSize: 15,
   },
 });

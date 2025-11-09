@@ -1,198 +1,256 @@
-import React from 'react';
+import React, { useState } from "react";
 import {
-View,
-Text,
-TouchableOpacity,
-StyleSheet,
-SafeAreaView,
-Alert,
-} from 'react-native';
-import { Feather } from '@expo/vector-icons';
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  Modal,
+} from "react-native";
+import { Feather } from "@expo/vector-icons";
+import BackButton from "../components/BackButton";
 
-const primaryColor = '#B431F4';
-const textColorDark = '#333';
-const dangerColor = '#FF4444';
+const primaryColor = "#B431F4";
+const secundaryColor = "#a4dc22ff";
+const textColorDark = "#333";
+const dangerColor = "#FF4444";
 
 export default function MenuScreen({ navigation }) {
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
 
-const handleLogout = () => {
-    Alert.alert(
-    'Sair',
-    'Tem certeza que deseja sair da sua conta?',
-    [
-        {
-        text: 'Cancelar',
-        style: 'cancel',
-        },
-        {
-        text: 'Sair',
-        onPress: () => {
-            // Aqui você pode limpar o AsyncStorage/Context
-            navigation.reset({
-            index: 0,
-            routes: [{ name: 'PreHome' }],
-            });
-        },
-        style: 'destructive',
-        },
-    ],
-    { cancelable: true }
-    );
-};
+  const confirmDelete = () => {
+    setShowDeleteModal(false);
+    navigation.reset({
+      index: 0,
+      routes: [{ name: "PreHome" }],
+    });
+  };
 
-const handleDeleteAccount = () => {
-    Alert.alert(
-    'Excluir Conta',
-    'Tem certeza? Esta ação não pode ser desfeita e todos os seus dados serão perdidos permanentemente.',
-    [
-        {
-        text: 'Cancelar',
-        style: 'cancel',
-        },
-        {
-        text: 'Excluir',
-        onPress: () => {
-            // Aqui você faria a requisição para excluir a conta
-            Alert.alert('Conta excluída', 'Sua conta foi excluída com sucesso.');
-            navigation.reset({
-            index: 0,
-            routes: [{ name: 'PreHome' }],
-            });
-        },
-        style: 'destructive',
-        },
-    ],
-    { cancelable: true }
-    );
-};
+  const confirmLogout = () => {
+    setShowLogoutModal(false);
+    navigation.reset({
+      index: 0,
+      routes: [{ name: "PreHome" }],
+    });
+  };
 
-return (
-    <SafeAreaView style={styles.safeArea}>
+  return (
     <View style={styles.container}>
-        
-        {/* Header com botão de voltar */}
-        <View style={styles.header}>
-        <TouchableOpacity 
-            style={styles.backButton}
-            onPress={() => navigation.goBack()}
+      {/* HEADER */}
+      <View style={styles.header}>
+        <BackButton onPress={() => navigation.navigate("Home")} />
+        <Text style={styles.headerTitle}>Menu</Text>
+      </View>
+
+      {/* LISTA */}
+      <View style={styles.menuList}>
+        <TouchableOpacity
+          style={styles.menuItem}
+          onPress={() => navigation.navigate("Settings")}
         >
-            <Feather name="arrow-left" size={24} color={primaryColor} />
-            <Text style={styles.menuText}>Menu</Text>
+          <Text style={styles.menuItemText}>Configurações</Text>
+          <Feather name="chevron-right" size={20} color={textColorDark} />
         </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.menuItem}
+          onPress={() => navigation.navigate("Sacola")}
+        >
+          <Text style={styles.menuItemText}>Sacola</Text>
+          <Feather name="chevron-right" size={20} color={textColorDark} />
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.menuItem}
+          onPress={() => navigation.navigate("Vendas")}
+        >
+          <Text style={styles.menuItemText}>Suas vendas</Text>
+          <Feather name="chevron-right" size={20} color={textColorDark} />
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.menuItem}
+          onPress={() => navigation.navigate("Pedidos")}
+        >
+          <Text style={styles.menuItemText}>Seus pedidos</Text>
+          <Feather name="chevron-right" size={20} color={textColorDark} />
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.menuItem}
+          onPress={() => setShowLogoutModal(true)}
+        >
+          <Text style={styles.menuItemText}>Sair</Text>
+          <Feather name="chevron-right" size={20} color={textColorDark} />
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.menuItem, styles.menuItemLast]}
+          onPress={() => setShowDeleteModal(true)}
+        >
+          <Text style={styles.menuItemTextDanger}>Excluir conta</Text>
+          <Feather name="chevron-right" size={20} color={dangerColor} />
+        </TouchableOpacity>
+      </View>
+
+      {/* === MODAIS === */}
+      {/* EXCLUIR CONTA */}
+      <Modal visible={showDeleteModal} transparent animationType="fade">
+        <View style={styles.modalBackground}>
+          <View style={styles.modalBox}>
+            <Text style={styles.modalText}>
+              Certeza que deseja excluir sua conta?
+            </Text>
+            <Text style={styles.modalSubText}>
+              Todos seus dados serão perdidos.
+            </Text>
+
+            <View style={styles.modalButtons}>
+              <TouchableOpacity
+                style={styles.modalButtonFilled}
+                onPress={() => setShowDeleteModal(false)}
+              >
+                <Text style={styles.modalButtonFilledText}>Voltar</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.modalButtonOutline}
+                onPress={confirmDelete}
+              >
+                <Text style={styles.modalButtonOutlineText}>Excluir</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
         </View>
+      </Modal>
 
-        {/* Lista de opções do menu */}
-        <View style={styles.menuList}>
-        
-        {/* Configurações */}
-        <TouchableOpacity 
-            style={styles.menuItem}
-            onPress={() => navigation.navigate('Settings')} 
-        >
-            <Text style={styles.menuItemText}>Configurações</Text>
-            <Feather name="chevron-right" size={20} color={textColorDark} />
-        </TouchableOpacity>
+      {/* SAIR */}
+      <Modal visible={showLogoutModal} transparent animationType="fade">
+        <View style={styles.modalBackground}>
+          <View style={styles.modalBox}>
+            <Text style={styles.modalText}>Deseja sair da sua conta?</Text>
 
-        {/* Sacola */}
-        <TouchableOpacity 
-            style={styles.menuItem}
-            onPress={() => navigation.navigate('Sacola')}
-        >
-            <Text style={styles.menuItemText}>Sacola</Text>
-            <Feather name="chevron-right" size={20} color={textColorDark} />
-        </TouchableOpacity>
+            <View style={styles.modalButtons}>
+              <TouchableOpacity
+                style={styles.modalButtonFilled}
+                onPress={() => setShowLogoutModal(false)}
+              >
+                <Text style={styles.modalButtonFilledText}>Voltar</Text>
+              </TouchableOpacity>
 
-        {/* Suas vendas */}
-        <TouchableOpacity 
-            style={styles.menuItem}
-            onPress={() => navigation.navigate('Vendas')}
-        >
-            <Text style={styles.menuItemText}>Suas vendas</Text>
-            <Feather name="chevron-right" size={20} color={textColorDark} />
-        </TouchableOpacity>
-
-        {/* Suas compras */}
-        <TouchableOpacity 
-            style={styles.menuItem}
-            onPress={() => navigation.navigate('Compra')}
-        >
-            <Text style={styles.menuItemText}>Suas compras</Text>
-            <Feather name="chevron-right" size={20} color={textColorDark} />
-        </TouchableOpacity>
-
-        {/* Sair */}
-        <TouchableOpacity 
-            style={styles.menuItem}
-            onPress={handleLogout}
-        >
-            <Text style={styles.menuItemText}>Sair</Text>
-            <Feather name="chevron-right" size={20} color={textColorDark} />
-        </TouchableOpacity>
-
-        {/* Excluir conta (em vermelho) */}
-        <TouchableOpacity 
-            style={[styles.menuItem, styles.menuItemLast]}
-            onPress={handleDeleteAccount}
-        >
-            <Text style={styles.menuItemTextDanger}>Excluir conta</Text>
-            <Feather name="chevron-right" size={20} color={dangerColor} />
-        </TouchableOpacity>
-
+              <TouchableOpacity
+                style={styles.modalButtonOutline}
+                onPress={confirmLogout}
+              >
+                <Text style={styles.modalButtonOutlineText}>Sair</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
         </View>
-
+      </Modal>
     </View>
-    </SafeAreaView>
-);
+  );
 }
 
 const styles = StyleSheet.create({
-safeArea: {
+  container: {
     flex: 1,
-    backgroundColor: '#fff',
-},
-container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    paddingHorizontal: 20,
-    paddingTop: 40,
-},
-header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 40,
-},
-backButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-},
-menuText: {
-    fontSize: 20,
-    fontWeight: '600',
+    backgroundColor: "#FFF",
+    paddingTop: 20,
+  },
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: 30,
+    marginBottom: 20,
+    paddingHorizontal: 25,
+  },
+  headerTitle: {
+    fontSize: 24,
+    fontWeight: "700",
     color: primaryColor,
     marginLeft: 10,
-},
-menuList: {
+  },
+  menuList: {
     flex: 1,
-},
-menuItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    marginTop: 10,
+    paddingHorizontal: 25, 
+  },
+  menuItem: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     paddingVertical: 20,
     borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
-},
-menuItemLast: {
+    borderBottomColor: "#eee",
+  },
+  menuItemLast: {
     borderBottomWidth: 0,
-},
-menuItemText: {
+  },
+  menuItemText: {
     fontSize: 18,
-    fontWeight: '400',
     color: textColorDark,
-},
-menuItemTextDanger: {
+  },
+  menuItemTextDanger: {
     fontSize: 18,
-    fontWeight: '400',
     color: dangerColor,
-},
+  },
+  modalBackground: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.4)",
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 30,
+  },
+  modalBox: {
+    width: "100%",
+    backgroundColor: "#FFF",
+    borderRadius: 20,
+    padding: 25,
+    alignItems: "center",
+  },
+  modalText: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: textColorDark,
+    textAlign: "center",
+  },
+  modalSubText: {
+    fontSize: 14,
+    color: "#666",
+    marginTop: 5,
+    textAlign: "center",
+  },
+  modalButtons: {
+    flexDirection: "row",
+    gap: 10,
+    marginTop: 25,
+  },
+  modalButtonFilled: {
+    backgroundColor: secundaryColor,
+    paddingVertical: 10,
+    paddingHorizontal: 25,
+    borderRadius: 25,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  modalButtonFilledText: {
+    color: "#FFF",
+    fontWeight: "700",
+    fontSize: 16,
+  },
+  modalButtonOutline: {
+    borderWidth: 2,
+    borderColor: secundaryColor,
+    paddingVertical: 10,
+    paddingHorizontal: 25,
+    borderRadius: 25,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  modalButtonOutlineText: {
+    color: secundaryColor,
+    fontWeight: "700",
+    fontSize: 16,
+  },
 });
