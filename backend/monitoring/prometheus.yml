@@ -1,0 +1,14 @@
+global:
+  scrape_interval: 5s
+
+scrape_configs:
+  - job_name: 'microservices'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets:
+          - 'auth-service:8900'
+          - 'user-service:8400'
+          - 'currency-service:8100'
+          - 'gateway-service:8765'
+          - 'order-service:8200'
+          - 'book-service:8000'
