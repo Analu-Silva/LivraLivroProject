@@ -12,6 +12,7 @@ import br.edu.atitus.book_service.entities.BookGenreEntity;
 import br.edu.atitus.book_service.repositories.BookConditionRepository;
 import br.edu.atitus.book_service.repositories.BookGenreRepository;
 import br.edu.atitus.book_service.repositories.BookRepository;
+import br.edu.atitus.book_service.exceptions.ResourceNotFoundException;
 import jakarta.transaction.Transactional;
 
 @Service
@@ -28,32 +29,88 @@ public class BookService {
 		this.bookGenreRepository = bookGenreRepository;
 		this.bookConditionRepository = bookConditionRepository;
 	}
+	
+	private void validateUserType(Integer userType) {
+		if (userType != 0 && userType != 1)
+			throw new SecurityException("Usuário sem permissão");
+	}
+
+	private BookEntity findBookById(UUID id) {
+		return bookRepository.findById(id)
+				.orElseThrow(() -> new ResourceNotFoundException("Livro não encontrado"));
+	}
 
 	@Transactional
-	public BookEntity bookRegistration(BookDTO dto) throws Exception {
-		BookEntity newBook = new BookEntity();
-		newBook.setTitle(dto.title());
-		newBook.setNumberOfPages(dto.numberOfPages());
-		newBook.setPrice(dto.price());
+	public BookEntity alterBook(UUID id, BookDTO dto, UUID UserId, Integer userType) {
 
-		newBook.setNumberOfYears(dto.numberOfYears());
-		newBook.setIsbn(dto.isbn());
-		newBook.setPublisher(dto.publisher());
-		newBook.setDescription(dto.description());
+		validateUserType(userType);
+		BookEntity book = findBookById(id);
 
-		List<Integer> genreIds = dto.genresId();
-		List<BookGenreEntity> genreObjects = bookGenreRepository.findAllById(genreIds);
-		newBook.setGenre(genreObjects);
+		if (dto.title() != null && !dto.title().isEmpty()) {
+			book.setTitle(dto.title());
+		}
+		
+		if (dto.price() != null) {
+			book.setPrice(dto.price());
+		}
+		
+		if (dto.currency() != null && !dto.currency().isEmpty()) {
+			book.setCurrency(dto.currency());
+		}
+		
+		if (dto.numberOfPages() != null) {
+			book.setNumberOfPages(dto.numberOfPages());
+		}
+		
+		if (dto.genresId() != null) {
+			
+			List<Integer> newGenreIds = dto.genresId();
+			List<BookGenreEntity> newGenres = bookGenreRepository.findAllById(newGenreIds);
+			
+			if (newGenres.size() != newGenreIds.size()) {
+				throw new ResourceNotFoundException("Gênero(s) não encontrado(s)");
+			}
+	
+			book.setGenre(newGenres);
+		}
+		
+		if (dto.bookConditionId() != null) {
+			BookConditionEntity condition = bookConditionRepository.findById(dto.bookConditionId())
+					.orElseThrow (() -> new ResourceNotFoundException("Condição não encontrada"));
+			book.setBookCondition(condition);
+		}
+		
+		if (dto.numberOfYears() != null) {
+			book.setNumberOfYears(dto.numberOfYears());
+		}
+		
+		if (dto.isbn() != null && !dto.isbn().isEmpty()) {
+			book.setIsbn(dto.isbn());
+		}
+		
+		if (dto.publisher() != null && !dto.publisher().isEmpty()) {
+			book.setPublisher(dto.publisher());
+		}
+		
+		if (dto.stock() != null) {
+			book.setStock(dto.stock());
+		}
+		
+		if (dto.author() != null && !dto.author().isEmpty()) {
+			book.setAuthor(dto.author());
+		}
+		
+//		if (dto.seller() != null) {
+//			book.setSeller(dto.seller());
+//		}
+//		
+		if (dto.description() != null && !dto.description().isEmpty()) {
+			book.setDescription(dto.description());
+		}
 
-		Integer conditionId = dto.bookConditionId();
-		BookConditionEntity conditionObject = bookConditionRepository.findById(conditionId)
-				.orElseThrow(() -> new Exception());
-		newBook.setBookCondition(conditionObject);
+		bookRepository.save(book);
 
-//		TODO substituir lógica do seller
-		newBook.setSeller(UUID.randomUUID()); /////////////////////////////////
-
-		return bookRepository.save(newBook);
+		return book;
 	}
 
 }

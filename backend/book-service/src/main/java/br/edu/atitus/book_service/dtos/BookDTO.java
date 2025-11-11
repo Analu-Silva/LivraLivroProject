@@ -2,7 +2,6 @@ package br.edu.atitus.book_service.dtos;
 
 import java.math.BigDecimal;
 import java.util.List;
-import java.util.UUID;
 
 import jakarta.validation.constraints.Digits;
 import jakarta.validation.constraints.Max;
@@ -16,29 +15,48 @@ import jakarta.validation.constraints.Size;
 
 public record BookDTO(
 
-		@NotBlank String imageUrl,
+		@NotEmpty(message = "A imagem é obrigatória")
+		@Size(min = 1, max = 5, message = "É necessário colocar no mínimo um e no máximo cinco imagens") 
+		List<@NotBlank(message = "É obrigatório a url da imagem") String> imagesUrl,
 
-		@NotBlank @Size(min = 1, max = 255) String title,
+		@NotBlank(message = "O título é obrigatório") @Size(max = 255, message = "Título muito longo") String title,
 
-		@NotNull @Positive @Digits(integer = 5, fraction = 2) @Min(value = 1) @Max(value = 50000) BigDecimal price,
+		@NotNull(message = "O preço é obrigatório") @Positive(message = "O preço deve ser positivo") 
+		@Digits(integer = 5, fraction = 2) @Min(value = 10, message = "O preço mínimo é 10") 
+		@Max(value = 50000, message = "O valor máximo é de 50000") BigDecimal price,
 
-		@NotBlank @Size(min = 3, max = 3) String currency,
+		@NotBlank(message = "A moeda é obrigatória") @Size(min = 3, max = 3, message = "Sigla da moeda inválida") String currency,
 
-		@NotNull @Positive @Min(value = 10) @Max(value = 10000) Integer numberOfPages,
+		@NotNull(message = "O número de páginas é obrigatório") @Positive(message = "O número de páginas deve ser positivo") 
+		@Min(value = 20, message = "Um livro deve ter mais que 20 páginas") 
+		@Max(value = 10000, message = "Um livro não pode ter mais que 10000 páginas") Integer numberOfPages,
 
-		@NotEmpty @Size(min = 1, max = 5) List<@NotNull @Positive Integer> genresId,
+		@NotEmpty(message = "O gênero literário é obrigatório") 
+		@Size(min = 1, max = 5, message = "É necessário colocar no mínimo um e no máximo cinco gêneros literários") 
+		List<@NotNull(message = "É obrigatório o id do gênero literário")
+		@Positive(message = "O id do gênero literário deve ser positivo") Integer> genresId,
 
-		@NotNull @Positive @Min(value = 1) @Max(value = 2) Integer bookConditionId,
+		@NotNull(message = "A condição do livro é obrigatória") @Positive(message = "Número da condição inválida") 
+		@Min(value = 1, message = "Número da condição inválida") 
+		@Max(value = 2, message = "Número da condição inválida") Integer bookConditionId,
 
-		@NotNull @PositiveOrZero @Min(value = 0) @Max(value = 100) Integer numberOfYears,
+		@NotNull(message = "O número de anos é obrigatório") 
+		@PositiveOrZero(message = "O livro não pode ter número de anos negativo") 
+		@Max(value = 120, message = "O livro deve ter menos que 120 anos") Integer numberOfYears,
 
-		@NotBlank @Size(min = 10, max = 13) String isbn,
+		@NotBlank(message = "A moeda é obrigatória") @Size(max = 13, message = "ISBN deve ter 13 dígitos") String isbn,
 
-		@NotBlank @Size(min = 1, max = 255) String publisher,
+		@NotBlank(message = "O nome da editora é obrigatória") 
+		@Size(max = 255, message = "Nome da editora muito longo") String publisher,
 
-		@NotNull @Positive @Min(value = 1) @Max(value = 100) Integer stock,
+		@NotNull(message = "O estoque é obrigatório") @Positive(message = "O estoque deve ser positivo")
+		@Min(value = 1, message = "É necessário pelo menos uma unidade no estoque") 
+		@Max(value = 100, message = "O número máximo de unidades é 100") Integer stock,
 
-		@NotNull UUID seller,
+		@NotNull(message = "O nome do autor é obrigatório") @Size(max = 255, message = "Nome do autor muito longo") String author,
 
-		@NotBlank @Size(min = 10, max = 2000) String description) {
+//		@NotNull(message = "O id do vendedor é obrigatório") UUID seller,
+
+		@NotBlank(message = "A descrição do livro é obrigatória")
+		@Size(min = 30, max = 2000, message = "A descrição deve ter entre 30 e 2000 caracteres") String description) {
 }

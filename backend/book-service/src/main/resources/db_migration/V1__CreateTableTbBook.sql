@@ -10,7 +10,6 @@ CREATE TABLE tb_book_genre (
 
 CREATE TABLE tb_book (
 	id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-	image_url TEXT,
 	title VARCHAR(255) NOT NULL,
 	price NUMERIC(7,2) NOT NULL CHECK (price > 0),
 	currency CHAR(3) NOT NULL, 
@@ -18,11 +17,19 @@ CREATE TABLE tb_book (
 	book_condition_id INTEGER NOT NULL,
 	FOREIGN KEY (book_condition_id) REFERENCES tb_book_condition (id),
 	number_of_years INTEGER NOT NULL,
+	author VARCHAR(255) NOT NULL, 
 	isbn CHAR(13) UNIQUE,
 	publisher VARCHAR(255) NOT NULL,
 	stock INTEGER NOT NULL,
 	seller UUID NOT NULL,
 	description VARCHAR(2000)
+);
+
+CREATE TABLE tb_book_image_url (
+	id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+	image_url VARCHAR(2048) NOT NULL UNIQUE,
+	book_id UUID NOT NULL,
+	FOREIGN KEY (book_id) REFERENCES tb_book (id)
 );
 
 CREATE TABLE tb_book_genres (

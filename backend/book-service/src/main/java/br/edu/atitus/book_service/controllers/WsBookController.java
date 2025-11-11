@@ -2,6 +2,7 @@ package br.edu.atitus.book_service.controllers;
 
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.BeanUtils;
 import org.springframework.http.ResponseEntity;
@@ -19,28 +20,69 @@ import br.edu.atitus.book_service.dtos.BookDTO;
 import br.edu.atitus.book_service.entities.BookConditionEntity;
 import br.edu.atitus.book_service.entities.BookEntity;
 import br.edu.atitus.book_service.entities.BookGenreEntity;
+import br.edu.atitus.book_service.entities.BookImageUrlEntity;
 import br.edu.atitus.book_service.repositories.BookConditionRepository;
 import br.edu.atitus.book_service.repositories.BookGenreRepository;
+import br.edu.atitus.book_service.repositories.BookImageUrlRepository;
 import br.edu.atitus.book_service.repositories.BookRepository;
+import br.edu.atitus.book_service.services.BookService;
+import br.edu.atitus.book_service.exceptions.ResourceAlreadyExistsException;
+import br.edu.atitus.book_service.exceptions.ResourceNotFoundException;
 import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/ws/books")
 public class WsBookController {
+	private final BookService bookService;
 	private final BookRepository bookRepository;
-	private BookGenreRepository bookGenreRepository;
-	private BookConditionRepository bookConditionRepository;
+	private final BookGenreRepository bookGenreRepository;
+	private final BookConditionRepository bookConditionRepository;
+	private final BookImageUrlRepository bookImageUrlRepository;
 
 	public WsBookController(BookRepository bookrepository, BookGenreRepository bookGenreRepository,
-			BookConditionRepository bookConditionRepository) {
+			BookConditionRepository bookConditionRepository, BookImageUrlRepository bookImageUrlRepository, BookService bookService) {
 		super();
+		this.bookService = bookService;
 		this.bookRepository = bookrepository;
 		this.bookGenreRepository = bookGenreRepository;
 		this.bookConditionRepository = bookConditionRepository;
+		this.bookImageUrlRepository = bookImageUrlRepository;
 	}
 
-	private BookEntity convertDto2Entity(BookDTO dto) throws Exception {
-		var book = new BookEntity();
+	private void validateUserType(Integer userType) {
+		if (userType != 0 && userType != 1)
+			throw new SecurityException("Usuário sem permissão");
+	}
+
+	private void validateUserTypeAndById(UUID sellerId, UUID UserId, Integer userType) {
+		if (userType != 0 && !sellerId.equals(UserId))
+			throw new SecurityException("Você não está autorizado a modificar dados de outros usuários");
+	}
+	
+	private void validateIsbnUniquenessWithIdNull(String isbn) {
+		if (bookRepository.existsByIsbn(isbn.trim()))
+			throw new ResourceAlreadyExistsException("isbn: Já existe um livro com este isbn");
+	}
+
+	private void validateIsbnUniquenessWithIdNotNull(UUID id, String isbn) {
+		if (bookRepository.existsByIsbnAndIdNot(isbn, id))
+			throw new ResourceAlreadyExistsException("isbn: Já existe um livro com este isbn");
+	}
+	
+	private void validateImageUrlUniquenessWithId(List<String> imagesUrl) {
+		if (imagesUrl == null || imagesUrl.isEmpty()) {
+			return;
+		}
+		
+		List<String> existingUrls = bookImageUrlRepository.findExistingUrls(imagesUrl);
+		
+		if (!existingUrls.isEmpty()) {
+				throw new ResourceAlreadyExistsException("Já existe livro cadastrado com esta url");
+			}
+		}
+
+	private BookEntity convertDto2Entity(BookDTO dto) {
+		BookEntity book = new BookEntity();
 		BeanUtils.copyProperties(dto, book);
 
 		if (dto.genresId() != null && !dto.genresId().isEmpty()) {
@@ -50,8 +92,20 @@ public class WsBookController {
 
 		if (dto.bookConditionId() != null) {
 			BookConditionEntity condition = bookConditionRepository.findById(dto.bookConditionId())
-					.orElseThrow(() -> new Exception("Book Contidition not found"));
+					.orElseThrow(() -> new ResourceNotFoundException("Condição do livro não encontrada"));
 			book.setBookCondition(condition);
+		}
+
+		if (dto.imagesUrl() != null && !dto.imagesUrl().isEmpty()) {
+
+			List<BookImageUrlEntity> imageEntities = dto.imagesUrl().stream().map(url -> {
+				BookImageUrlEntity img = new BookImageUrlEntity();
+				img.setImageUrl(url);
+				img.setBook(book);
+				return img;
+			}).collect(Collectors.toList());
+
+			book.setImagesUrls(imageEntities);
 		}
 
 		return book;
@@ -59,13 +113,15 @@ public class WsBookController {
 
 	@PostMapping
 	public ResponseEntity<BookEntity> createBook(@Valid @RequestBody BookDTO dto,
-			@RequestHeader("X-User-Id") UUID UserId, @RequestHeader("X-User-Email") String emailUser,
-			@RequestHeader("X-User-Type") Integer userType) throws Exception {
+			@RequestHeader("X-User-Id") UUID UserId,
+			@RequestHeader("X-User-Type") Integer userType) {
 
-		if (userType != 0 && userType != 1)
-			throw new SecurityException("Usuário sem permissão");
+		validateUserType(userType);
+		validateIsbnUniquenessWithIdNull(dto.isbn());
+		validateImageUrlUniquenessWithId(dto.imagesUrl());
 
-		var book = convertDto2Entity(dto);
+		BookEntity book = convertDto2Entity(dto);
+		book.setSeller(UserId);
 		bookRepository.save(book);
 
 		return ResponseEntity.status(201).body(book);
@@ -73,37 +129,33 @@ public class WsBookController {
 
 	@PatchMapping("/{idBook}")
 	public ResponseEntity<BookEntity> updateBook(@PathVariable UUID idBook, @Valid @RequestBody BookDTO dto,
-			@RequestHeader("X-User-Id") UUID UserId, @RequestHeader("X-User-Email") String emailUser,
-			@RequestHeader("X-User-Type") Integer userType) throws Exception {
+			@RequestHeader("X-User-Id") UUID UserId, @RequestHeader("X-User-Type") Integer userType) {
+		
+		validateUserType(userType);
+		validateIsbnUniquenessWithIdNotNull(idBook, dto.isbn());
+		validateImageUrlUniquenessWithId(dto.imagesUrl());
+		
+		BookEntity updatebook = bookService.alterBook(idBook, dto, UserId, userType);
 
-		if (userType != 0 && userType != 1)
-			throw new SecurityException("Usuário sem permissão");
-
-		var book = convertDto2Entity(dto);
-		book.setId(idBook);
-		bookRepository.save(book);
-
-		return ResponseEntity.ok(book);
+		return ResponseEntity.ok(updatebook);
 	}
 
 	@DeleteMapping("/{idBook}")
-	public ResponseEntity<String> deleteBook(@PathVariable UUID idBook, @RequestHeader("X-User-Id") UUID UserId,
-			@RequestHeader("X-User-Email") String emailUser, @RequestHeader("X-User-Type") Integer userType)
-			throws Exception {
+	public ResponseEntity<Void> deleteBook(@PathVariable UUID idBook, @RequestHeader("X-User-Id") UUID UserId,
+			@RequestHeader("X-User-Type") Integer userType) {
 
-		if (userType != 0 && userType != 1)
-			throw new SecurityException("Usuário sem permissão");
+		validateUserType(userType);
 
 		bookRepository.deleteById(idBook);
 
-		return ResponseEntity.ok("Excluído"); // Ou null ou ok.("Excluído")
+		return ResponseEntity.noContent().build(); // null ou .ok("Excluído") tbm
 	}
 
 	@DeleteMapping("/internal/deleteAccount/{id}")
 	@Transactional
 	public ResponseEntity<Void> deleteAllBooksFromUser(@PathVariable UUID id) {
 
-		List<BookEntity> booksToBeDeleted = bookRepository.findBySeller(id);
+		List<BookEntity> booksToBeDeleted = bookRepository.findBooksBySeller(id);
 		bookRepository.deleteAll(booksToBeDeleted);
 
 		return ResponseEntity.noContent().build();

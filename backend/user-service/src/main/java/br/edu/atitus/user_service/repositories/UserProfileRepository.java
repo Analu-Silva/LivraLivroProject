@@ -8,7 +8,7 @@ import br.edu.atitus.user_service.entities.UserProfileEntity;
 
 public interface UserProfileRepository extends JpaRepository<UserProfileEntity, UUID> {
 
-	boolean existsByCpf(String email);
+	boolean existsByCpf(String cpf);
 
-	boolean existsByCpfAndIdNot(String email, UUID id);
+	boolean existsByCpfAndIdNot(String cpf, UUID id);
 }

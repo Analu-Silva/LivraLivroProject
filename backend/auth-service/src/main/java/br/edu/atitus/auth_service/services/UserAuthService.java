@@ -1,5 +1,7 @@
 package br.edu.atitus.auth_service.services;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 import org.springframework.security.core.userdetails.UserDetails;
@@ -230,6 +232,16 @@ public class UserAuthService implements UserDetailsService {
 		} catch (Exception e) {
 			throw new RuntimeException("Erro ao deletar conta");
 		}
+	}
+	
+	public List<UUID> getActiveDistinctSellers() {
+		List<UUID> activeSellerIds = bookServiceClient.getSellers();
+		
+		if (activeSellerIds == null || activeSellerIds.isEmpty()) {
+			return new ArrayList<>();
+		}
+		
+		return userAuthRepository.findAllSellersAuthInfo(activeSellerIds);
 	}
 
 }

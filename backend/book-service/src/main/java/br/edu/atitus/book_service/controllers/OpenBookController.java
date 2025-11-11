@@ -1,6 +1,7 @@
 package br.edu.atitus.book_service.controllers;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Value;
@@ -13,6 +14,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import br.edu.atitus.book_service.clients.CurrencyClient;
@@ -84,9 +86,34 @@ public class OpenBookController {
 
 	@GetMapping("/{targetCurrency}")
 	public ResponseEntity<Page<BookEntity>> getAllBooks(@PathVariable String targetCurrency,
-			@PageableDefault(page = 0, size = 5, sort = "description", direction = Direction.ASC) Pageable pageable)
-			throws Exception {
-		Page<BookEntity> books = repository.findAll(pageable);
+			@RequestParam(required = false, name = "currency") String sourceCurrency,
+			@RequestParam(required = false, name = "genreId") Integer sourceGenreId,
+			@RequestParam(required = false, name = "bookConditionId") Integer sourceConditionId,
+			@RequestParam(required = false, name = "author") UUID sourceAuthor,
+			@RequestParam(required = false, name = "search") String searchText, 
+			@PageableDefault(page = 0, size = 10, sort = "description", direction = Direction.ASC) Pageable pageable)
+			 {
+		
+		Page<BookEntity> books;
+		if (sourceCurrency != null) {
+			books = repository.findByCurrency(sourceCurrency, pageable);
+			
+		} else if(sourceGenreId != null) {
+			books = repository.findByGenre_id(sourceGenreId, pageable);
+			
+		} else if(sourceConditionId != null) {
+			books = repository.findByBookCondition_Id(sourceConditionId, pageable);
+		
+		} else if (sourceAuthor != null) {
+			books = repository.findBySeller(sourceAuthor, pageable);
+		
+		} else if (searchText != null) {
+			books = repository.findByTitleContainingIgnoreCase(searchText, pageable);
+			
+		} else {
+			books = repository.findAll(pageable);
+		}
+		
 		for (BookEntity book : books) {
 			CurrencyResponse currency = currencyClient.getCurrency(book.getPrice(), book.getCurrency(),
 					targetCurrency);
@@ -98,6 +125,11 @@ public class OpenBookController {
 																											// cambio.getAmbiente());
 		}
 		return ResponseEntity.ok(books);
-
+	}
+	
+	@GetMapping("/internal/sellers")
+	public ResponseEntity<List<UUID>> getSellers() {
+		List<UUID> sellerIds = repository.findSellerId();
+		return ResponseEntity.ok(sellerIds);
 	}
 }

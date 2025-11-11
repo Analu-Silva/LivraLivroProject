@@ -3,9 +3,13 @@ package br.edu.atitus.book_service.entities;
 import jakarta.persistence.Transient;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -15,6 +19,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 
 @Entity
@@ -25,8 +30,9 @@ public class BookEntity {
 	@GeneratedValue(strategy = GenerationType.UUID)
 	private UUID id;
 
-	@Column(name = "image_url")
-	private String imageUrl;
+	@OneToMany(mappedBy = "book", cascade = CascadeType.ALL, orphanRemoval = true)
+	@JsonManagedReference
+	private List<BookImageUrlEntity> imagesUrls = new ArrayList<>();
 
 	@Column()
 	private String title;
@@ -62,9 +68,12 @@ public class BookEntity {
 	private Integer stock;
 
 	@Column()
+	private String author;
+
+	@Column()
 	private UUID seller;
 
-	@Column(columnDefinition = "TEXT")
+	@Column()
 	private String description;
 
 	@Transient
@@ -81,12 +90,12 @@ public class BookEntity {
 		this.id = id;
 	}
 
-	public String getImageUrl() {
-		return imageUrl;
+	public List<BookImageUrlEntity> getImagesUrls() {
+		return imagesUrls;
 	}
 
-	public void setImageUrl(String imageUrl) {
-		this.imageUrl = imageUrl;
+	public void setImagesUrls(List<BookImageUrlEntity> imagesUrls) {
+		this.imagesUrls = imagesUrls;
 	}
 
 	public String getTitle() {
@@ -167,6 +176,14 @@ public class BookEntity {
 
 	public void setStock(Integer stock) {
 		this.stock = stock;
+	}
+
+	public String getAuthor() {
+		return author;
+	}
+
+	public void setAuthor(String author) {
+		this.author = author;
 	}
 
 	public UUID getSeller() {

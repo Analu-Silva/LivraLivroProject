@@ -20,6 +20,7 @@ public class ConfigSecurity {
 				.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 				.authorizeHttpRequests(auth -> auth
 						.requestMatchers("/auth/**").permitAll()
+						.requestMatchers("/internal/**").permitAll()
 						// .requestMatchers("/auth*","/auth/**","/swagger-ui*", "swagger-ui/**",
 						// "/v3/api-docs/**").permitAll()
 						// .requestMatchers(HttpMethod.OPTIONS).permitAll()
