@@ -1,5 +1,6 @@
 package br.edu.atitus.order_service.controllers;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -23,7 +24,11 @@ import br.edu.atitus.order_service.clients.BookResponse;
 import br.edu.atitus.order_service.dtos.OrderDTO;
 import br.edu.atitus.order_service.entities.OrderEntity;
 import br.edu.atitus.order_service.entities.OrderItemEntity;
+import br.edu.atitus.order_service.entities.PaymentMethodEntity;
+import br.edu.atitus.order_service.exceptions.ResourceNotFoundException;
+import br.edu.atitus.order_service.repositories.PaymentMethodRepository;
 import br.edu.atitus.order_service.services.OrderService;
+import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/ws/orders")
@@ -31,20 +36,31 @@ public class OrderController {
 
 	private final OrderService orderService;
 	private final BookClient bookClient;
+	private final PaymentMethodRepository paymentMethodRepository;
 
-	public OrderController(OrderService orderService, BookClient bookClient) {
+	public OrderController(OrderService orderService, BookClient bookClient, PaymentMethodRepository paymentMethodRepository) {
 		this.orderService = orderService;
 		this.bookClient = bookClient;
+		this.paymentMethodRepository = paymentMethodRepository;
 	}
 
 	@PostMapping
-	public ResponseEntity<OrderEntity> createOrder(@RequestBody OrderDTO orderDTO,
+	public ResponseEntity<OrderEntity> createOrder(@Valid @RequestBody OrderDTO orderDTO,
 			@RequestHeader("X-User-Id") UUID userId, @RequestHeader("X-User-Email") String userEmail,
 			@RequestHeader("X-User-Type") Integer userType) {
-
+		
+		final BigDecimal FIXED_SHIPPING = new BigDecimal("12.00");
+		
+		Integer paymentMethodId = orderDTO.paymentMethodId();
+		
+		PaymentMethodEntity paymentMethod = paymentMethodRepository
+				.findById(paymentMethodId).orElseThrow(() -> new ResourceNotFoundException("Método de pagamento não encontrado"));
+		
 		OrderEntity order = new OrderEntity();
 		order.setOrderDate(LocalDateTime.now());
 		order.setCustomerId(userId);
+		order.setPaymentMethod(paymentMethod);
+		order.setShipping(FIXED_SHIPPING);
 
 		List<OrderItemEntity> items = orderDTO.items().stream().map(dto -> {
 			OrderItemEntity item = new OrderItemEntity();

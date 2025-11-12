@@ -1,7 +1,15 @@
+CREATE TABLE tb_payment_method (
+	id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+	method VARCHAR(30) NOT NULL UNIQUE
+);
+
 CREATE TABLE tb_order (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     order_date TIMESTAMP NOT NULL,
-    customer_id UUID NOT NULL
+	payment_method_id INTEGER NOT NULL,
+	FOREIGN KEY (payment_method_id) REFERENCES tb_payment_method (id),
+    customer_id UUID NOT NULL,
+    shipping NUMERIC(4,2) 
 );
 
 CREATE TABLE tb_order_item (

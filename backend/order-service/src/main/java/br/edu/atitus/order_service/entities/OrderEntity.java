@@ -14,6 +14,8 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
@@ -35,12 +37,18 @@ public class OrderEntity {
 
 	@OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
 	private List<OrderItemEntity> items;
+	
+	@ManyToOne
+	@JoinColumn(name = "payment_method_id")
+	private PaymentMethodEntity paymentMethod;
 
 	@Transient
 	private BigDecimal totalPrice;
 
 	@Transient
 	private BigDecimal totalConvertedPrice;
+	
+	private BigDecimal shipping;
 
 	public UUID getId() {
 		return id;
@@ -74,6 +82,14 @@ public class OrderEntity {
 		this.items = items;
 	}
 
+	public PaymentMethodEntity getPaymentMethod() {
+		return paymentMethod;
+	}
+
+	public void setPaymentMethod(PaymentMethodEntity paymentMethod) {
+		this.paymentMethod = paymentMethod;
+	}
+
 	public BigDecimal getTotalPrice() {
 		return totalPrice;
 	}
@@ -88,6 +104,14 @@ public class OrderEntity {
 
 	public void setTotalConvertedPrice(BigDecimal totalConvertedPrice) {
 		this.totalConvertedPrice = totalConvertedPrice;
+	}
+
+	public BigDecimal getShipping() {
+		return shipping;
+	}
+
+	public void setShipping(BigDecimal shipping) {
+		this.shipping = shipping;
 	}
 
 }

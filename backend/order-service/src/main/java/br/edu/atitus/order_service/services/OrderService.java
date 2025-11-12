@@ -7,10 +7,10 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import br.edu.atitus.order_service.clients.CurrencyClient;
-import br.edu.atitus.order_service.clients.CurrencyResponse;
 import br.edu.atitus.order_service.clients.BookClient;
 import br.edu.atitus.order_service.clients.BookResponse;
+import br.edu.atitus.order_service.clients.CurrencyClient;
+import br.edu.atitus.order_service.clients.CurrencyResponse;
 import br.edu.atitus.order_service.entities.OrderEntity;
 import br.edu.atitus.order_service.entities.OrderItemEntity;
 import br.edu.atitus.order_service.repositories.OrderRepository;
@@ -39,9 +39,11 @@ public class OrderService {
 		for (OrderEntity order : orders) {
 			BigDecimal totalPrice = BigDecimal.ZERO;
 			BigDecimal totalConvertedPrice = BigDecimal.ZERO;
+			BigDecimal shipping = (order.getShipping() != null) ? order.getShipping() : BigDecimal.ZERO;
 
 			for (OrderItemEntity item : order.getItems()) {
 				BookResponse book = bookClient.getBookById(item.getBookId());
+				
 				item.setBook(book);
 
 				BigDecimal quantity = new BigDecimal(item.getQuantity());
@@ -54,8 +56,8 @@ public class OrderService {
 				BigDecimal totalConvertedPriceMultiplication = item.getConvertedPriceAtPruchase().multiply(quantity);
 				totalConvertedPrice = totalConvertedPrice.add(totalConvertedPriceMultiplication);
 			}
-			order.setTotalPrice(totalPrice);
-			order.setTotalConvertedPrice(totalConvertedPrice);
+			order.setTotalPrice(totalPrice.add(shipping));
+			order.setTotalConvertedPrice(totalConvertedPrice.add(shipping));
 		}
 		return orders;
 	}
