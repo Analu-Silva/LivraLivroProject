@@ -3,6 +3,11 @@ CREATE TABLE tb_book_condition (
 	condition VARCHAR(30) NOT NULL UNIQUE
 );
 
+CREATE TABLE tb_book_language (
+	id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+	language VARCHAR(50) NOT NULL UNIQUE
+);
+
 CREATE TABLE tb_book_genre (
 	id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
 	genre VARCHAR(50) NOT NULL UNIQUE
@@ -19,6 +24,8 @@ CREATE TABLE tb_book (
 	number_of_years INTEGER NOT NULL,
 	author VARCHAR(255) NOT NULL, 
 	isbn CHAR(13) UNIQUE,
+	book_language_id INTEGER NOT NULL,
+	FOREIGN KEY (book_language_id) REFERENCES tb_book_language (id),
 	publisher VARCHAR(255) NOT NULL,
 	stock INTEGER NOT NULL,
 	seller UUID NOT NULL,

@@ -17,13 +17,16 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import br.edu.atitus.book_service.dtos.BookDTO;
+import br.edu.atitus.book_service.dtos.BookUpdateDTO;
 import br.edu.atitus.book_service.entities.BookConditionEntity;
 import br.edu.atitus.book_service.entities.BookEntity;
 import br.edu.atitus.book_service.entities.BookGenreEntity;
 import br.edu.atitus.book_service.entities.BookImageUrlEntity;
+import br.edu.atitus.book_service.entities.BookLanguageEntity;
 import br.edu.atitus.book_service.repositories.BookConditionRepository;
 import br.edu.atitus.book_service.repositories.BookGenreRepository;
 import br.edu.atitus.book_service.repositories.BookImageUrlRepository;
+import br.edu.atitus.book_service.repositories.BookLanguageRepository;
 import br.edu.atitus.book_service.repositories.BookRepository;
 import br.edu.atitus.book_service.services.BookService;
 import br.edu.atitus.book_service.exceptions.ResourceAlreadyExistsException;
@@ -38,25 +41,22 @@ public class WsBookController {
 	private final BookGenreRepository bookGenreRepository;
 	private final BookConditionRepository bookConditionRepository;
 	private final BookImageUrlRepository bookImageUrlRepository;
+	private final BookLanguageRepository bookLanguageRepository;
 
 	public WsBookController(BookRepository bookrepository, BookGenreRepository bookGenreRepository,
-			BookConditionRepository bookConditionRepository, BookImageUrlRepository bookImageUrlRepository, BookService bookService) {
+			BookConditionRepository bookConditionRepository, BookImageUrlRepository bookImageUrlRepository, BookService bookService, BookLanguageRepository bookLanguageRepository) {
 		super();
 		this.bookService = bookService;
 		this.bookRepository = bookrepository;
 		this.bookGenreRepository = bookGenreRepository;
 		this.bookConditionRepository = bookConditionRepository;
 		this.bookImageUrlRepository = bookImageUrlRepository;
+		this.bookLanguageRepository = bookLanguageRepository;
 	}
 
 	private void validateUserType(Integer userType) {
 		if (userType != 0 && userType != 1)
 			throw new SecurityException("Usuário sem permissão");
-	}
-
-	private void validateUserTypeAndById(UUID sellerId, UUID UserId, Integer userType) {
-		if (userType != 0 && !sellerId.equals(UserId))
-			throw new SecurityException("Você não está autorizado a modificar dados de outros usuários");
 	}
 	
 	private void validateIsbnUniquenessWithIdNull(String isbn) {
@@ -95,6 +95,12 @@ public class WsBookController {
 					.orElseThrow(() -> new ResourceNotFoundException("Condição do livro não encontrada"));
 			book.setBookCondition(condition);
 		}
+		
+		if (dto.bookLanguageId() != null) {
+			BookLanguageEntity condition = bookLanguageRepository.findById(dto.bookLanguageId())
+					.orElseThrow(() -> new ResourceNotFoundException("Linguagem do livro não encontrada"));
+			book.setBookLanguage(condition);
+		}
 
 		if (dto.imagesUrl() != null && !dto.imagesUrl().isEmpty()) {
 
@@ -128,7 +134,7 @@ public class WsBookController {
 	}
 
 	@PatchMapping("/{idBook}")
-	public ResponseEntity<BookEntity> updateBook(@PathVariable UUID idBook, @Valid @RequestBody BookDTO dto,
+	public ResponseEntity<BookEntity> updateBook(@PathVariable UUID idBook, @Valid @RequestBody BookUpdateDTO dto,
 			@RequestHeader("X-User-Id") UUID UserId, @RequestHeader("X-User-Type") Integer userType) {
 		
 		validateUserType(userType);

@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
 import br.edu.atitus.book_service.clients.CurrencyClient;
 import br.edu.atitus.book_service.clients.CurrencyResponse;
 import br.edu.atitus.book_service.entities.BookEntity;
+import br.edu.atitus.book_service.exceptions.ResourceNotFoundException;
 import br.edu.atitus.book_service.repositories.BookRepository;
 
 @RestController
@@ -42,7 +43,7 @@ public class OpenBookController {
 
 	@GetMapping("/{idBook}/{targetCurrency}")
 	public ResponseEntity<BookEntity> getBook(@PathVariable UUID idBook, @PathVariable String targetCurrency)
-			throws Exception {
+			{
 
 		targetCurrency = targetCurrency.toUpperCase();
 		String nameCache = "Book";
@@ -51,7 +52,7 @@ public class OpenBookController {
 		BookEntity book = cacheManager.getCache(nameCache).get(keyCache, BookEntity.class);
 
 		if (book == null) {
-			book = repository.findById(idBook).orElseThrow(() -> new Exception("Book not found"));
+			book = repository.findById(idBook).orElseThrow(() -> new ResourceNotFoundException("Livro não encontrado"));
 			book.setEnvironment("Book-service running on Port: " + serverPort);
 
 			if (targetCurrency.equalsIgnoreCase(book.getCurrency()))
@@ -78,7 +79,7 @@ public class OpenBookController {
 
 	@GetMapping("/noconverter/{idBook}")
 	public ResponseEntity<BookEntity> getNoConverter(@PathVariable UUID idBook) throws Exception {
-		var book = repository.findById(idBook).orElseThrow(() -> new Exception("Livro não encontrado"));
+		var book = repository.findById(idBook).orElseThrow(() -> new ResourceNotFoundException("Livro não encontrado"));
 		book.setConvertedPrice(BigDecimal.ONE.negate());
 		book.setEnvironment("Book-service running on Port: " + serverPort);
 		return ResponseEntity.ok(book);

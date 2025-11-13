@@ -5,12 +5,14 @@ import java.util.UUID;
 
 import org.springframework.stereotype.Service;
 
-import br.edu.atitus.book_service.dtos.BookDTO;
+import br.edu.atitus.book_service.dtos.BookUpdateDTO;
 import br.edu.atitus.book_service.entities.BookConditionEntity;
 import br.edu.atitus.book_service.entities.BookEntity;
 import br.edu.atitus.book_service.entities.BookGenreEntity;
+import br.edu.atitus.book_service.entities.BookLanguageEntity;
 import br.edu.atitus.book_service.repositories.BookConditionRepository;
 import br.edu.atitus.book_service.repositories.BookGenreRepository;
+import br.edu.atitus.book_service.repositories.BookLanguageRepository;
 import br.edu.atitus.book_service.repositories.BookRepository;
 import br.edu.atitus.book_service.exceptions.ResourceNotFoundException;
 import jakarta.transaction.Transactional;
@@ -21,13 +23,15 @@ public class BookService {
 	private final BookRepository bookRepository;
 	private final BookGenreRepository bookGenreRepository;
 	private final BookConditionRepository bookConditionRepository;
+	private final BookLanguageRepository bookLanguageRepository;
 
 	public BookService(BookRepository bookRepository, BookGenreRepository bookGenreRepository,
-			BookConditionRepository bookConditionRepository) {
+			BookConditionRepository bookConditionRepository, BookLanguageRepository bookLanguageRepository) {
 		super();
 		this.bookRepository = bookRepository;
 		this.bookGenreRepository = bookGenreRepository;
 		this.bookConditionRepository = bookConditionRepository;
+		this.bookLanguageRepository = bookLanguageRepository;
 	}
 	
 	private void validateUserType(Integer userType) {
@@ -41,7 +45,7 @@ public class BookService {
 	}
 
 	@Transactional
-	public BookEntity alterBook(UUID id, BookDTO dto, UUID UserId, Integer userType) {
+	public BookEntity alterBook(UUID id, BookUpdateDTO dto, UUID UserId, Integer userType) {
 
 		validateUserType(userType);
 		BookEntity book = findBookById(id);
@@ -88,6 +92,12 @@ public class BookService {
 			book.setIsbn(dto.isbn());
 		}
 		
+		if (dto.bookLanguageId() != null) {
+			BookLanguageEntity language = bookLanguageRepository.findById(dto.bookLanguageId())
+					.orElseThrow (() -> new ResourceNotFoundException("Linguagem não encontrada"));
+			book.setBookLanguage(language);
+		}
+		
 		if (dto.publisher() != null && !dto.publisher().isEmpty()) {
 			book.setPublisher(dto.publisher());
 		}
@@ -99,11 +109,7 @@ public class BookService {
 		if (dto.author() != null && !dto.author().isEmpty()) {
 			book.setAuthor(dto.author());
 		}
-		
-//		if (dto.seller() != null) {
-//			book.setSeller(dto.seller());
-//		}
-//		
+			
 		if (dto.description() != null && !dto.description().isEmpty()) {
 			book.setDescription(dto.description());
 		}

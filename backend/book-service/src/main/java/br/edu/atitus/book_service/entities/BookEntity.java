@@ -60,6 +60,10 @@ public class BookEntity {
 
 	@Column()
 	private String isbn;
+	
+	@ManyToOne
+	@JoinColumn(name = "book_language_id")
+	private BookLanguageEntity bookLanguage;
 
 	@Column()
 	private String publisher;
@@ -160,6 +164,14 @@ public class BookEntity {
 
 	public void setIsbn(String isbn) {
 		this.isbn = isbn;
+	}
+
+	public BookLanguageEntity getBookLanguage() {
+		return bookLanguage;
+	}
+
+	public void setBookLanguage(BookLanguageEntity bookLanguage) {
+		this.bookLanguage = bookLanguage;
 	}
 
 	public String getPublisher() {
