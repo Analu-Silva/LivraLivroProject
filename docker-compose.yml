@@ -4,6 +4,8 @@ volumes:
   db-order-data:
   db-user-auth-data:
   db-user-profile-data:
+  db-wishlist-data:
+  db-cart-data:
 
 services:
 
@@ -126,6 +128,60 @@ services:
       - auth-service
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://db-user-profile:5432/db_user_profile
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: 654333
+      EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE: http://discovery-service:8761/eureka
+
+# -------------------------------
+  db-wishlist:
+    image: postgres:17
+    environment:
+      POSTGRES_DB: db_wishlist
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 654333
+    volumes:
+      - db-wishlist-data:/var/lib/postgresql/data
+
+  wishlist-service:
+    image: wishlist-service:latest
+    build:
+      context: ./backend/wishlist-service
+    depends_on:
+      - discovery-service
+      - db-wishlist
+      - book-service
+      - currency-service
+    ports:
+      - "8011:8011"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db-wishlist:5432/db_wishlist
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: 654333
+      EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE: http://discovery-service:8761/eureka
+
+  # -------------------------------
+  db-cart:
+    image: postgres:17
+    environment:
+      POSTGRES_DB: db_cart
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 654333
+    volumes:
+      - db-cart-data:/var/lib/postgresql/data
+
+  cart-service:
+    image: cart-service:latest
+    build:
+      context: ./backend/cart-service
+    depends_on:
+      - discovery-service
+      - db-cart
+      - book-service
+      - currency-service
+    ports:
+      - "8010:8010"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db-cart:5432/db_cart
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: 654333
       EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE: http://discovery-service:8761/eureka

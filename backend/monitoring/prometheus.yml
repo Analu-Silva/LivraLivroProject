@@ -6,9 +6,11 @@ scrape_configs:
     metrics_path: '/actuator/prometheus'
     static_configs:
       - targets:
-          - 'auth-service:8900'
-          - 'user-service:8400'
-          - 'currency-service:8100'
-          - 'gateway-service:8765'
-          - 'order-service:8200'
-          - 'book-service:8000'
+          - "auth-service:8900"
+          - "user-service:8400"
+          - "currency-service:8100"
+          - "gateway-service:8765"
+          - "order-service:8200"
+          - "wishlist-service:8011"
+          - "cart-service: 8010"
+          - "book-service:8000"

@@ -8,6 +8,7 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -145,6 +146,15 @@ public class WsBookController {
 
 		return ResponseEntity.ok(updatebook);
 	}
+	
+    // Endpoint para a whistlist e cart-service
+	
+    @GetMapping("/{idBook}")
+    public ResponseEntity<BookEntity> getBookById(@PathVariable UUID idBook) {
+        BookEntity book = bookRepository.findById(idBook)
+                .orElseThrow(() -> new ResourceNotFoundException("Livro não encontrado"));
+        return ResponseEntity.ok(book);
+    }
 
 	@DeleteMapping("/{idBook}")
 	public ResponseEntity<Void> deleteBook(@PathVariable UUID idBook, @RequestHeader("X-User-Id") UUID UserId,
