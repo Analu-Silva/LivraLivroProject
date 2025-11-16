@@ -1,0 +1,18 @@
+package br.edu.atitus.cart_service.clients;
+
+import java.util.UUID;
+
+import org.springframework.cloud.openfeign.FeignClient;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+
+@FeignClient(name = "book-service")
+public interface BookClient {
+
+	@GetMapping("/books/noconverter/{id}")
+	BookResponse getBookById(@PathVariable UUID id);
+
+	@GetMapping("/books/{id}/{targetCurrency}")
+	BookResponse getBookByIdWithCurrency(@PathVariable UUID id, @PathVariable String targetCurrency);
+}
+
