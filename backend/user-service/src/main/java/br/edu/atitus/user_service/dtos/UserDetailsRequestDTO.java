@@ -12,7 +12,7 @@ public record UserDetailsRequestDTO(
 		@Max(value = 3, message = "Escolha uma das opções fornecidas")
 		Integer userGenreId,
 
-		@Size(max = 60, message = "Insira nome de bairro válido")
+		@Size(max = 255, message = "Descrição muito longa")
 		String description) {
 
 	public UserDetailsRequestDTO {

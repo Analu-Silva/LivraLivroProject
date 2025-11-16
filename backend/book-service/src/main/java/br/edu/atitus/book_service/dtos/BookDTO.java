@@ -21,12 +21,13 @@ public record BookDTO(
 
 		@NotBlank(message = "O título é obrigatório") @Size(max = 255, message = "Título muito longo") String title,
 
-		@NotNull(message = "O preço é obrigatório") @Positive(message = "O preço deve ser positivo") 
+		@NotNull(message = "O preço é obrigatório") 
 		@Digits(integer = 5, fraction = 2, message = "Máximo duas casas decimais e cinco dígios antes da vírgula") 
 		@Min(value = 10, message = "O preço mínimo é 10") 
 		@Max(value = 50000, message = "O valor máximo é de 50000") BigDecimal price,
 
-		@NotBlank(message = "A moeda é obrigatória") @Size(min = 3, max = 3, message = "Sigla da moeda inválida") String currency,
+		@NotBlank(message = "A moeda é obrigatória") 
+		@Size(min = 3, max = 3, message = "Sigla da moeda inválida") String currency,
 
 		@NotNull(message = "O número de páginas é obrigatório") 
 		@Min(value = 20, message = "Um livro deve ter mais que 20 páginas") 
@@ -37,7 +38,8 @@ public record BookDTO(
 		List<@NotNull(message = "É obrigatório o id do gênero literário")
 		@Positive(message = "O id do gênero literário deve ser positivo") Integer> genresId,
 
-		@NotNull(message = "A condição do livro é obrigatória") @Min(value = 1, message = "Número da condição inválida") 
+		@NotNull(message = "A condição do livro é obrigatória") 
+		@Min(value = 1, message = "Número da condição inválida") 
 		@Max(value = 2, message = "Número da condição inválida") Integer bookConditionId,
 
 		@NotNull(message = "O número de anos é obrigatório") 
@@ -46,7 +48,8 @@ public record BookDTO(
 
 		@NotBlank(message = "A moeda é obrigatória") @Size(max = 13, message = "ISBN deve ter 13 dígitos") String isbn,
 		
-		@NotNull(message = "A linguagem do livro é obrigatória") @Min(value = 1, message = "Número da linguagem inválida") 
+		@NotNull(message = "A linguagem do livro é obrigatória") 
+		@Min(value = 1, message = "Número da linguagem inválida") 
 		@Max(value = 3, message = "Número da linguagem inválida") Integer bookLanguageId,
 
 		@NotBlank(message = "O nome da editora é obrigatória") 
@@ -56,7 +59,8 @@ public record BookDTO(
 		@Min(value = 1, message = "É necessário pelo menos uma unidade no estoque") 
 		@Max(value = 100, message = "O número máximo de unidades é 100") Integer stock,
 
-		@NotNull(message = "O nome do autor é obrigatório") @Size(max = 255, message = "Nome do autor muito longo") String author,
+		@NotNull(message = "O nome do autor é obrigatório") 
+		@Size(max = 255, message = "Nome do autor muito longo") String author,
 
 		@NotBlank(message = "A descrição do livro é obrigatória")
 		@Size(min = 30, max = 2000, message = "A descrição deve ter entre 30 e 2000 caracteres") String description) {

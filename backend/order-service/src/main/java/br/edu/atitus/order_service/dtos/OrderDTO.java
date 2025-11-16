@@ -15,7 +15,7 @@ public record OrderDTO(
 		@NotEmpty(message = "É necessário pelo menos um item")
 		List<OrderItemDTO> items,
 		
-		@NotNull(message = "A forma de pagamento é obrigatória") @Positive(message = "Número do método de pagamento inválido") 
+		@NotNull(message = "A forma de pagamento é obrigatória")  
 		@Min(value = 1, message = "Número do método de pagamento inválido") 
 		@Max(value = 3, message = "Número do método de pagamento inválido")
 		Integer paymentMethodId) {
