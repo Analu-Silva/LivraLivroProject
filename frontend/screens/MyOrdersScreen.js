@@ -51,12 +51,6 @@ const OrdersScreen = ({ navigation }) => {
                   R$ {item.price.toFixed(2).replace(".", ",")}
                 </Text>
                 <Text style={styles.titleText}>{item.title}</Text>
-                <TouchableOpacity
-                  style={styles.reviewButton}
-                  onPress={() => navigation.navigate("Adicionar")}
-                >
-                  <Text style={styles.reviewButtonText}>Avaliar</Text>
-                </TouchableOpacity>
               </View>
             </View>
           ))}
