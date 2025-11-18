@@ -1,4 +1,4 @@
-package br.edu.atitus.cart_service.config;
+package br.edu.atitus.cart_service.configs;
 
 import java.time.LocalDateTime;
 

@@ -1,4 +1,4 @@
-package br.edu.atitus.wishlist_service.clients.dtos;
+package br.edu.atitus.wishlist_service.dtos;
 
 import java.math.BigDecimal;
 import java.util.UUID;

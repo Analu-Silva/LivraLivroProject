@@ -1,4 +1,4 @@
-package br.edu.atitus.wishlist_service.config;
+package br.edu.atitus.wishlist_service.configs;
 
 import java.time.LocalDateTime;
 
