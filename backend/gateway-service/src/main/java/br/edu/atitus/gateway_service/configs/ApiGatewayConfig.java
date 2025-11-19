@@ -24,6 +24,8 @@ public class ApiGatewayConfig {
 				.route(p -> p.path("/ws/auth/**").uri("lb://auth-service"))
 				.route(p -> p.path("/profile/**").uri("lb://user-service"))
 				.route(p -> p.path("/ws/profile/**").uri("lb://user-service"))
+				.route(p -> p.path("/ws/cart/**").uri("lb://cart-service"))
+				.route(p -> p.path("/ws/wishlist/**").uri("lb://wishlist-service"))
 				.route(p -> p.path("/ws/orders/**").uri("lb://order-service")).build();
 	}
 
