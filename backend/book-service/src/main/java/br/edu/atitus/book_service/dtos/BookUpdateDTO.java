@@ -7,7 +7,6 @@ import jakarta.validation.constraints.Digits;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.PositiveOrZero;
 import jakarta.validation.constraints.Size;
 
@@ -18,7 +17,6 @@ public record BookUpdateDTO(
 
 		@Size(max = 255, message = "Título muito longo") String title,
 
-		@Positive(message = "O preço deve ser positivo") 
 		@Digits(integer = 5, fraction = 2, message = "Máximo duas casas decimais e cinco dígios antes da vírgula")
 		@Min(value = 10, message = "O preço mínimo é 10") 
 		@Max(value = 50000, message = "O valor máximo é de 50000") BigDecimal price,
@@ -29,11 +27,11 @@ public record BookUpdateDTO(
 		@Max(value = 10000, message = "Um livro não pode ter mais que 10000 páginas") Integer numberOfPages,
  
 		@Size(min = 1, max = 5, message = "É necessário colocar no mínimo um e no máximo cinco gêneros literários") 
-		List<@Positive(message = "O id do gênero literário deve ser positivo") Integer> genresId,
+		List<@Min(value = 1, message = "Número do gênero inválido") 
+		@Max(value = 16, message = "Número do gênero inválido") Integer> genresId,
 
-		@Positive(message = "Número da condição inválida") 
-		@Min(value = 1, message = "Número da condição inválida") 
-		@Max(value = 2, message = "Número da condição inválida") Integer bookConditionId,
+		@Min(value = 1, message = "Número da condição inválido") 
+		@Max(value = 2, message = "Número da condição inválido") Integer bookConditionId,
 
 		@PositiveOrZero(message = "O livro não pode ter número de anos negativo") 
 		@Max(value = 120, message = "O livro deve ter menos que 120 anos") Integer numberOfYears,
@@ -45,7 +43,6 @@ public record BookUpdateDTO(
 
 		@Size(max = 255, message = "Nome da editora muito longo") String publisher,
 
-		@Positive(message = "O estoque deve ser positivo")
 		@Min(value = 1, message = "É necessário pelo menos uma unidade no estoque") 
 		@Max(value = 100, message = "O número máximo de unidades é 100") Integer stock,
 

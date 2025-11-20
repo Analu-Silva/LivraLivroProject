@@ -9,7 +9,6 @@ import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.PositiveOrZero;
 import jakarta.validation.constraints.Size;
 
@@ -36,11 +35,12 @@ public record BookDTO(
 		@NotEmpty(message = "O gênero literário é obrigatório") 
 		@Size(min = 1, max = 5, message = "É necessário colocar no mínimo um e no máximo cinco gêneros literários") 
 		List<@NotNull(message = "É obrigatório o id do gênero literário")
-		@Positive(message = "O id do gênero literário deve ser positivo") Integer> genresId,
+		@Min(value = 1, message = "Número do gênero inválido") 
+		@Max(value = 16, message = "Número do gênero inválido") Integer> genresId,
 
 		@NotNull(message = "A condição do livro é obrigatória") 
-		@Min(value = 1, message = "Número da condição inválida") 
-		@Max(value = 2, message = "Número da condição inválida") Integer bookConditionId,
+		@Min(value = 1, message = "Número da condição inválido") 
+		@Max(value = 2, message = "Número da condição inválido") Integer bookConditionId,
 
 		@NotNull(message = "O número de anos é obrigatório") 
 		@PositiveOrZero(message = "O livro não pode ter número de anos negativo") 
@@ -55,7 +55,7 @@ public record BookDTO(
 		@NotBlank(message = "O nome da editora é obrigatória") 
 		@Size(max = 255, message = "Nome da editora muito longo") String publisher,
 
-		@NotNull(message = "O estoque é obrigatório") @Positive(message = "O estoque deve ser positivo")
+		@NotNull(message = "O estoque é obrigatório")
 		@Min(value = 1, message = "É necessário pelo menos uma unidade no estoque") 
 		@Max(value = 100, message = "O número máximo de unidades é 100") Integer stock,
 

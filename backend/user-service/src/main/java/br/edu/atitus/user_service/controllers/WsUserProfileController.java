@@ -93,16 +93,6 @@ public class WsUserProfileController {
 
 	// Detalhes Usuário
 
-//	@PostMapping("/{id}/details")
-//	public ResponseEntity<UserDetailsResponseDTO> createDetails(@PathVariable UUID id,
-//			@Valid @RequestBody UserDetailsRequestDTO dto, @RequestHeader("X-User-Id") UUID UserId,
-//			@RequestHeader("X-User-Type") Integer userType) {
-//
-//		UserDetailsResponseDTO createDetails = userProfileService.addDetails(id, dto, UserId, userType);
-//
-//		return ResponseEntity.status(201).body(createDetails);
-//	} LÓGICA MOVIDA PARA O AUTH-SERVICEA
-
 	@PatchMapping("/{id}/details")
 	public ResponseEntity<UserDetailsResponseDTO> updateDetails(@PathVariable UUID id,
 			@Valid @RequestBody UserDetailsRequestDTO dto, @RequestHeader("X-User-Id") UUID UserId,

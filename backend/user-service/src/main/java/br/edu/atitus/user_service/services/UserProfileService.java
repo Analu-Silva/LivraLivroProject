@@ -60,7 +60,11 @@ public class UserProfileService {
 	private void validateDateOfBirth(LocalDate dateOfBirth) {
 
 		LocalDate today = LocalDate.now();
+		LocalDate minAge = today.minusYears(12);
 		LocalDate maxAge = today.minusYears(120);
+		
+		if (dateOfBirth.isAfter(minAge))
+			throw new InvalidDataException("dateOfBirth: A idade mínima é 12 anos");
 
 		if (dateOfBirth.isBefore(maxAge))
 			throw new InvalidDataException("dateOfBirth: A idade parece não ser verdadeira");
@@ -111,7 +115,6 @@ public class UserProfileService {
 
 		validateUserType(userType);
 		validateUserTypeAndById(id, UserId, userType);
-
 		validateDateOfBirth(dto.dateOfBirth());
 
 		UserProfileEntity profile = findUserById(id);
@@ -306,14 +309,13 @@ public class UserProfileService {
 		return convertToDetailsDTO(profile);
 	}
 
-	@Transactional
-	public void deleteUserAccount(UUID id, UUID UserId, Integer userType) {
-
-		validateUserType(userType);
-		validateUserTypeAndById(id, UserId, userType);
-		
+//	@Transactional
+//	public void deleteUserAccount(UUID id, UUID UserId, Integer userType) {
+//
+//		validateUserType(userType);
+//		validateUserTypeAndById(id, UserId, userType);
 		//Se colocar lógica aqui dá um bug
-	}
+//	}
 	
 	// Mappers
 
@@ -328,9 +330,6 @@ public class UserProfileService {
 	}
 
 	private UserDetailsResponseDTO convertToDetailsDTO(UserProfileEntity profile) {
-
-		Integer genreId = (profile.getUserGenre() != null) ? profile.getUserGenre().getId() : null;
-
 		return new UserDetailsResponseDTO(profile.getUserImageUrl(), profile.getUserGenre(), profile.getDescription());
 	}
 }
