@@ -20,6 +20,7 @@ public record UserDetailsRequestDTO(
 		if (userImageUrl != null) {
 			userImageUrl = userImageUrl.trim();
 		}
+		
 		if (description != null) {
 			description = description.trim();
 		}
