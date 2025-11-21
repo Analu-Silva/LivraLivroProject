@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import br.edu.atitus.cart_service.dtos.CartItemDTO;
-import br.edu.atitus.cart_service.entities.CartEntity;
+import br.edu.atitus.cart_service.dtos.CartResponseDTO;
 import br.edu.atitus.cart_service.services.CartService;
 import jakarta.validation.Valid;
 
@@ -24,49 +24,54 @@ import jakarta.validation.Valid;
 @RequestMapping("/ws/cart")
 public class CartController {
 
-	private final CartService cartService;
+    private final CartService cartService;
 
-	public CartController(CartService cartService) {
-		this.cartService = cartService;
-	}
+    public CartController(CartService cartService) {
+        this.cartService = cartService;
+    }
 
-	@GetMapping
-	public ResponseEntity<CartEntity> getCart(@RequestParam(defaultValue = "USD") String currency,
-			@RequestHeader("X-User-Id") UUID userId, @RequestHeader("X-User-Email") String userEmail,
-			@RequestHeader("X-User-Type") Integer userType) {
-		CartEntity cart = cartService.getCartWithDetails(userId, currency.toUpperCase());
-		return ResponseEntity.ok(cart);
-	}
+    @GetMapping
+    public ResponseEntity<CartResponseDTO> getCart(@RequestParam(required = false) String targetCurrency,
+                                                  @RequestHeader("X-User-Id") UUID userId, 
+                                                  @RequestHeader("X-User-Email") String userEmail,
+                                                  @RequestHeader("X-User-Type") Integer userType) {
+        CartResponseDTO cart = cartService.getCartWithDetails(userId, targetCurrency);
+        return ResponseEntity.ok(cart);
+    }
 
-	@PostMapping("/items")
-	public ResponseEntity<CartEntity> addItemToCart(@Valid @RequestBody CartItemDTO itemDTO,
-			@RequestHeader("X-User-Id") UUID userId, @RequestHeader("X-User-Email") String userEmail,
-			@RequestHeader("X-User-Type") Integer userType) {
-		CartEntity cart = cartService.addItemToCart(userId, itemDTO.bookId(), itemDTO.quantity());
-		return ResponseEntity.status(HttpStatus.CREATED).body(cart);
-	}
+    @PostMapping("/items")
+    public ResponseEntity<CartResponseDTO> addItemToCart(@Valid @RequestBody CartItemDTO itemDTO,
+                                                        @RequestHeader("X-User-Id") UUID userId, 
+                                                        @RequestHeader("X-User-Email") String userEmail,
+                                                        @RequestHeader("X-User-Type") Integer userType) {
+        CartResponseDTO cart = cartService.addItemToCart(userId, itemDTO.bookId(), itemDTO.quantity());
+        return ResponseEntity.status(HttpStatus.CREATED).body(cart);
+    }
 
-	@PatchMapping("/items/{itemId}")
-	public ResponseEntity<CartEntity> updateItemQuantity(@PathVariable UUID itemId,
-			@RequestParam @Valid Integer quantity, @RequestHeader("X-User-Id") UUID userId,
-			@RequestHeader("X-User-Email") String userEmail, @RequestHeader("X-User-Type") Integer userType) {
-		CartEntity cart = cartService.updateItemQuantity(userId, itemId, quantity);
-		return ResponseEntity.ok(cart);
-	}
+    @PatchMapping("/items/{itemId}")
+    public ResponseEntity<CartResponseDTO> updateItemQuantity(@PathVariable UUID itemId,
+                                                             @RequestParam @Valid Integer quantity, 
+                                                             @RequestHeader("X-User-Id") UUID userId,
+                                                             @RequestHeader("X-User-Email") String userEmail,
+                                                             @RequestHeader("X-User-Type") Integer userType) {
+        CartResponseDTO cart = cartService.updateItemQuantity(userId, itemId, quantity);
+        return ResponseEntity.ok(cart);
+    }
 
-	@DeleteMapping("/items/{itemId}")
-	public ResponseEntity<String> removeItemFromCart(@PathVariable UUID itemId,
-			@RequestHeader("X-User-Id") UUID userId, @RequestHeader("X-User-Email") String userEmail,
-			@RequestHeader("X-User-Type") Integer userType) {
-		cartService.removeItemFromCart(userId, itemId);
-		return ResponseEntity.ok("Item removido do carrinho");
-	}
+    @DeleteMapping("/items/{itemId}")
+    public ResponseEntity<String> removeItemFromCart(@PathVariable UUID itemId,
+                                                    @RequestHeader("X-User-Id") UUID userId, 
+                                                    @RequestHeader("X-User-Email") String userEmail,
+                                                    @RequestHeader("X-User-Type") Integer userType) {
+        cartService.removeItemFromCart(userId, itemId);
+        return ResponseEntity.ok("Item removido do carrinho");
+    }
 
-	@DeleteMapping
-	public ResponseEntity<String> clearCart(@RequestHeader("X-User-Id") UUID userId,
-			@RequestHeader("X-User-Email") String userEmail, @RequestHeader("X-User-Type") Integer userType) {
-		cartService.clearCart(userId);
-		return ResponseEntity.ok("Carrinho limpo");
-	}
+    @DeleteMapping
+    public ResponseEntity<String> clearCart(@RequestHeader("X-User-Id") UUID userId,
+                                           @RequestHeader("X-User-Email") String userEmail, 
+                                           @RequestHeader("X-User-Type") Integer userType) {
+        cartService.clearCart(userId);
+        return ResponseEntity.ok("Carrinho limpo");
+    }
 }
-

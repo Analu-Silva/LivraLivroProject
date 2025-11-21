@@ -1,4 +1,4 @@
-package br.edu.atitus.wishlist_service.dtos;
+package br.edu.atitus.cart_service.dtos;
 
 import java.math.BigDecimal;
 import java.util.List;
