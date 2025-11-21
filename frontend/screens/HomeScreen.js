@@ -6,6 +6,7 @@ import {
   StyleSheet,
   ActivityIndicator,
   Alert,
+  TouchableOpacity,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 
@@ -86,54 +87,53 @@ const bookSectionsData = [
     id: 'section-6',
     title: 'Terror e Sobrenatural',
     data: [
-      { id: "book-25", image: require("../assets/livro.jpg"), price: 27.0 },
-      { id: "book-26", image: require("../assets/livro.jpg"), price: 27.0 },
-      { id: "book-27", image: require("../assets/livro.jpg"), price: 29.0 },
-      { id: "book-28", image: require("../assets/livro.jpg"), price: 29.0 },
-      { id: "book-29", image: require("../assets/livro.jpg"), price: 29.0 },
-      { id: "book-30", image: require("../assets/livro.jpg"), price: 29.0 },
+      { id: "book-31", image: require("../assets/livro.jpg"), price: 27.0 },
+      { id: "book-32", image: require("../assets/livro.jpg"), price: 27.0 },
+      { id: "book-33", image: require("../assets/livro.jpg"), price: 29.0 },
+      { id: "book-34", image: require("../assets/livro.jpg"), price: 29.0 },
+      { id: "book-35", image: require("../assets/livro.jpg"), price: 29.0 },
+      { id: "book-36", image: require("../assets/livro.jpg"), price: 29.0 },
     ],
   },
   {
     id: 'section-7',
     title: 'Comédia e Sátira',
     data: [
-      { id: "book-25", image: require("../assets/livro.jpg"), price: 27.0 },
-      { id: "book-26", image: require("../assets/livro.jpg"), price: 27.0 },
-      { id: "book-27", image: require("../assets/livro.jpg"), price: 29.0 },
-      { id: "book-28", image: require("../assets/livro.jpg"), price: 29.0 },
-      { id: "book-29", image: require("../assets/livro.jpg"), price: 29.0 },
-      { id: "book-30", image: require("../assets/livro.jpg"), price: 29.0 },
+      { id: "book-37", image: require("../assets/livro.jpg"), price: 27.0 },
+      { id: "book-38", image: require("../assets/livro.jpg"), price: 27.0 },
+      { id: "book-39", image: require("../assets/livro.jpg"), price: 29.0 },
+      { id: "book-40", image: require("../assets/livro.jpg"), price: 29.0 },
+      { id: "book-41", image: require("../assets/livro.jpg"), price: 29.0 },
+      { id: "book-42", image: require("../assets/livro.jpg"), price: 29.0 },
     ],
   },
   {
     id: 'section-8',
     title: 'Biografias e Memórias',
     data: [
-      { id: "book-25", image: require("../assets/livro.jpg"), price: 27.0 },
-      { id: "book-26", image: require("../assets/livro.jpg"), price: 27.0 },
-      { id: "book-27", image: require("../assets/livro.jpg"), price: 29.0 },
-      { id: "book-28", image: require("../assets/livro.jpg"), price: 29.0 },
-      { id: "book-29", image: require("../assets/livro.jpg"), price: 29.0 },
-      { id: "book-30", image: require("../assets/livro.jpg"), price: 29.0 },
+      { id: "book-43", image: require("../assets/livro.jpg"), price: 27.0 },
+      { id: "book-44", image: require("../assets/livro.jpg"), price: 27.0 },
+      { id: "book-45", image: require("../assets/livro.jpg"), price: 29.0 },
+      { id: "book-46", image: require("../assets/livro.jpg"), price: 29.0 },
+      { id: "book-47", image: require("../assets/livro.jpg"), price: 29.0 },
+      { id: "book-48", image: require("../assets/livro.jpg"), price: 29.0 },
     ],
   },
   {
     id: 'section-9',
     title: 'Autoajuda e Desenvolvimento Pessoal',
     data: [
-      { id: "book-25", image: require("../assets/livro.jpg"), price: 27.0 },
-      { id: "book-26", image: require("../assets/livro.jpg"), price: 27.0 },
-      { id: "book-27", image: require("../assets/livro.jpg"), price: 29.0 },
-      { id: "book-28", image: require("../assets/livro.jpg"), price: 29.0 },
-      { id: "book-29", image: require("../assets/livro.jpg"), price: 29.0 },
-      { id: "book-30", image: require("../assets/livro.jpg"), price: 29.0 },
+      { id: "book-49", image: require("../assets/livro.jpg"), price: 27.0 },
+      { id: "book-50", image: require("../assets/livro.jpg"), price: 27.0 },
+      { id: "book-51", image: require("../assets/livro.jpg"), price: 29.0 },
+      { id: "book-52", image: require("../assets/livro.jpg"), price: 29.0 },
+      { id: "book-53", image: require("../assets/livro.jpg"), price: 29.0 },
+      { id: "book-54", image: require("../assets/livro.jpg"), price: 29.0 },
     ],
   },
-
 ];
 
-export default function HomeScreen() {
+export default function HomeScreen({ requireLoginOnBookClick = false }) {
   const navigation = useNavigation();
 
   const [loading, setLoading] = useState(true);
@@ -144,6 +144,9 @@ export default function HomeScreen() {
   const [selectedSort, setSelectedSort] = useState(null);
 
   const [currency, setCurrency] = useState("BRL");
+
+  const [bookSections, setBookSections] = useState(bookSectionsData);
+  const [originalBookSections] = useState(bookSectionsData);
 
   const [showLoginModal, setShowLoginModal] = useState(false);
 
@@ -164,6 +167,44 @@ export default function HomeScreen() {
     return () => clearTimeout(timer);
   }, []);
 
+  const handleToggleCurrency = async () => {
+    const newCurrency = currency === "BRL" ? "USD" : "BRL";
+    // If switching to USD, call currency service to convert all prices.
+    if (newCurrency === "USD") {
+      try {
+        setLoading(true);
+        const { convertValue } = await import("../services/currencyService");
+
+        const convertedSections = await Promise.all(
+          bookSections.map(async (section) => {
+            const convertedData = await Promise.all(
+              section.data.map(async (item) => {
+                try {
+                  const converted = await convertValue(item.price, "BRL", "USD");
+                  return { ...item, price: Number(converted) };
+                } catch (err) {
+                  return { ...item };
+                }
+              })
+            );
+            return { ...section, data: convertedData };
+          })
+        );
+
+        setBookSections(convertedSections);
+        setCurrency(newCurrency);
+      } catch (err) {
+        Alert.alert("Erro", "Falha ao converter moeda: " + (err.message || err));
+      } finally {
+        setLoading(false);
+      }
+    } else {
+      // switching back to BRL: restore original prices
+      setBookSections(originalBookSections);
+      setCurrency(newCurrency);
+    }
+  };
+
   const handleSearchSubmit = () => {
     Alert.alert("Busca", `Você buscou por: ${searchText}`);
   };
@@ -178,48 +219,70 @@ export default function HomeScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <View style={styles.screenContainer}>
+      <TouchableOpacity 
+        style={styles.screenContainer}
+        activeOpacity={1}
+        onPress={() => {
+          if (requireLoginOnBookClick) {
+            setShowLoginModal(true);
+          }
+        }}
+        disabled={!requireLoginOnBookClick}
+      >
 
         {/* HEADER */}
-        <Header
-          currency={currency}
-          setCurrency={setCurrency}
-          navigation={navigation}
-          setShowLoginModal={setShowLoginModal}
-        />
+        <View pointerEvents={requireLoginOnBookClick ? "none" : "auto"}>
+          <Header
+            currency={currency}
+            setCurrency={setCurrency}
+            onToggleCurrency={handleToggleCurrency}
+            navigation={navigation}
+            setShowLoginModal={setShowLoginModal}
+          />
+        </View>
 
         {/* SEARCH BAR */}
-        <SearchBar
-          searchText={searchText}
-          setSearchText={setSearchText}
-          onSubmit={handleSearchSubmit}
-        />
+        <View pointerEvents={requireLoginOnBookClick ? "none" : "auto"}>
+          <SearchBar
+            searchText={searchText}
+            setSearchText={setSearchText}
+            onSubmit={handleSearchSubmit}
+          />
+        </View>
 
         {/* FILTER + SORT */}
-        <FilterSort
-          selectedFilter={selectedFilter}
-          setSelectedFilter={setSelectedFilter}
-          selectedSort={selectedSort}
-          setSelectedSort={setSelectedSort}
-          filterMenu={filterMenu}
-          sortMenu={sortMenu}
-        />
+        <View pointerEvents={requireLoginOnBookClick ? "none" : "auto"}>
+          <FilterSort
+            selectedFilter={selectedFilter}
+            setSelectedFilter={setSelectedFilter}
+            selectedSort={selectedSort}
+            setSelectedSort={setSelectedSort}
+            filterMenu={filterMenu}
+            sortMenu={sortMenu}
+          />
+        </View>
 
         <View style={styles.shadowDivider} />
 
         {/* LISTA DE SEÇÕES */}
-        <ScrollView style={{ flex: 1 }}>
-          {bookSectionsData.map((section) => (
+        <ScrollView 
+          style={{ flex: 1 }}
+          pointerEvents={requireLoginOnBookClick ? "none" : "auto"}
+        >
+          {bookSections.map((section) => (
             <BookSections
               key={section.id}
               section={section}
               navigation={navigation}
+              currency={currency}
             />
           ))}
         </ScrollView>
 
         {/* BOTTOM NAV */}
-        <BottomNav />
+        <View pointerEvents={requireLoginOnBookClick ? "none" : "auto"}>
+          <BottomNav />
+        </View>
 
         {/* MODAL LOGIN */}
         <LoginModal
@@ -228,7 +291,7 @@ export default function HomeScreen() {
           navigation={navigation}
         />
 
-      </View>
+      </TouchableOpacity>
     </SafeAreaView>
   );
 }
@@ -247,145 +310,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     backgroundColor: greyBackground,
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingTop: 35,
-    backgroundColor: '#fff',
-  },
-  logo: {
-    width: 71.806,
-    height: 47.487,
-    resizeMode: 'contain',
-  },
-  headerRight: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 15,
-  },
-  flagIcon: {
-    width: 32,
-    height: 33,
-    resizeMode: 'contain',
-  },
-  bagIcon: {
-    width: 20.95,
-    height: 22,
-    resizeMode: 'contain',
-  },
-  profileIcon: {
-    width: 42,
-    height: 42,
-    borderRadius: 16,
-    resizeMode: 'contain',
-  },
-  searchBarContainer: {
-    alignItems: 'center',
-    marginVertical: 25,
-  },
-  searchBarInner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    width: 316,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: primaryPurple,
-    paddingHorizontal: 10,
-    backgroundColor: '#fff',
-  },
-  searchInput: {
-    flex: 1,
-    height: 36,
-    fontSize: 13,
-    color: '#000',
-    paddingHorizontal: 10,
-  },
-  searchIconButton: {
-    padding: 5,
-  },
-  searchIconImage: {
-    width: 22,
-    height: 22,
-    resizeMode: 'contain',
-  },
-  filterSortContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'flex-start',
-    marginBottom: 10,
-    zIndex: 1000,
-  },
-  dropdownWrapper: {
-    position: 'relative',
-    marginHorizontal: 8,
-  },
-  filterButton: {
-    backgroundColor: primaryPurple,
-    borderRadius: 20,
-    paddingVertical: 6,
-    paddingHorizontal: 15,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    height: 36,
-    minWidth: 140,
-  },
-  sortButton: {
-    backgroundColor: primaryPurple,
-    borderRadius: 20,
-    paddingVertical: 6,
-    paddingHorizontal: 15,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    height: 36,
-    minWidth: 140,
-  },
-  filterSortButtonText: {
-    color: 'white',
-    fontSize: 14,
-    fontWeight: '600',
-    marginRight: 8,
-  },
-  filterButtonActive: {
-    backgroundColor: secundaryColor,
-  },
-  sortButtonActive: {
-    backgroundColor: secundaryColor,
-  },
-  filterSortButtonTextActive: {
-    color: primaryPurple,
-    fontWeight: '700',
-  },
-  dropdownMenu: {
-    position: 'absolute',
-    top: 44,
-    left: 0,
-    width: 180,
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    paddingVertical: 6,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.15,
-    shadowRadius: 10,
-    elevation: 10,
-    zIndex: 9999,
-  },
-  dropdownItem: {
-    paddingVertical: 12,
-    paddingHorizontal: 14,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  dropdownItemText: {
-    fontSize: 15,
-    color: primaryPurple,
-    fontWeight: '600',
   },
   shadowDivider: {
     height: 0.3,

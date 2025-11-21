@@ -7,7 +7,6 @@ import {
   Image,
   SafeAreaView,
   ScrollView,
-  Alert,
   Modal,
 } from 'react-native';
 import { Feather } from '@expo/vector-icons';
@@ -137,6 +136,23 @@ const AgeRestrictionModal = ({ visible, onClose }) => (
   </Modal>
 );
 
+const ErrorModal = ({ visible, onClose, title, message }) => (
+  <Modal animationType="fade" transparent visible={visible} onRequestClose={onClose}>
+    <View style={modalStyles.overlay}>
+      <View style={modalStyles.errorModalBox}>
+        <View style={modalStyles.errorIconContainer}>
+          <Feather name="alert-circle" size={50} color="#FF6B6B" />
+        </View>
+        <Text style={modalStyles.errorTitle}>{title}</Text>
+        <Text style={modalStyles.errorMessage}>{message}</Text>
+        <TouchableOpacity style={modalStyles.errorButton} onPress={onClose}>
+          <Text style={modalStyles.modalButtonText}>Entendi</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  </Modal>
+);
+
 const modalStyles = StyleSheet.create({
   overlay: { 
     flex: 1,
@@ -182,6 +198,46 @@ const modalStyles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '700',
   },
+  errorModalBox: {
+    width: 340,
+    minHeight: 280,
+    borderRadius: 20,
+    backgroundColor: '#FFF',
+    alignItems: 'center',
+    padding: 30,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 10,
+  },
+  errorIconContainer: {
+    marginBottom: 20,
+    marginTop: 10,
+  },
+  errorTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#FF6B6B',
+    textAlign: 'center',
+    marginBottom: 15,
+  },
+  errorMessage: {
+    fontSize: 15,
+    color: '#333',
+    textAlign: 'center',
+    lineHeight: 22,
+    marginBottom: 25,
+    paddingHorizontal: 10,
+  },
+  errorButton: {
+    width: '100%',
+    height: 48,
+    borderRadius: 31,
+    backgroundColor: primaryColor,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
 });
 
 export default function RegisterScreen({ navigation }) {
@@ -203,6 +259,11 @@ export default function RegisterScreen({ navigation }) {
   const [isValidCpfState, setIsValidCpfState] = useState(false);
   const [isValidPhoneState, setIsValidPhoneState] = useState(false);
   const [isValidFullDateState, setIsValidFullDateState] = useState(false);
+
+  // Estados para o modal de erro
+  const [showErrorModal, setShowErrorModal] = useState(false);
+  const [errorTitle, setErrorTitle] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
 
   // validação senha
   const hasLowerCase = /[a-z]/.test(password);
@@ -273,7 +334,9 @@ export default function RegisterScreen({ navigation }) {
 
 const handleRegister = async () => {
   if (!canCreateAccountButton) {
-    Alert.alert('Erro de Validação', 'Por favor, preencha todos os campos corretamente.');
+    setErrorTitle('Erro de Validação');
+    setErrorMessage('Por favor, preencha todos os campos corretamente.');
+    setShowErrorModal(true);
     return;
   }
   if (isUnderage()) {
@@ -300,14 +363,50 @@ const handleRegister = async () => {
     const response = await signup(userData);
     console.log('Cadastro bem-sucedido:', response);
     
-    Alert.alert('Sucesso', 'Cadastro realizado com sucesso!');
     await AsyncStorage.setItem('userName', name);
+    // Se o backend retornar um token, armazena para chamadas autenticadas
+    const possibleToken = response?.token || response?.accessToken || response?.access_token || response?.jwt || response?.data?.token;
+    if (possibleToken) {
+      await AsyncStorage.setItem('userToken', possibleToken);
+    }
+
     // Passar o userId para a próxima tela se vier na resposta
-    navigation.navigate('ProfileCreation', { userId: response.id });
+    navigation.navigate('Login', { userId: response.id });
     
   } catch (error) {
-    Alert.alert('Erro no Cadastro', error.message || 'Ocorreu um erro ao criar a conta');
-    console.error('Erro:', error);
+    console.error('Erro no cadastro:', error);
+    
+    // Tratamento específico de erros do backend
+    let title = 'Erro no Cadastro';
+    let message = 'Ocorreu um erro ao criar a conta. Tente novamente.';
+    
+    // Pega a mensagem de erro (de details ou diretamente do error)
+    const backendMessage = (error.details && error.details.message) || error.message || '';
+    
+    // Personalizar mensagens para erros específicos
+    if (backendMessage.toLowerCase().includes('phonenumber') || backendMessage.toLowerCase().includes('celular')) {
+      title = 'Número de Celular Inválido';
+      message = 'O número de celular informado não é válido. Verifique se digitou corretamente no formato (XX) XXXXX-XXXX.';
+    } else if (backendMessage.toLowerCase().includes('cpf')) {
+      title = 'CPF Inválido';
+      message = 'O CPF informado não é válido ou já está cadastrado.';
+    } else if (backendMessage.toLowerCase().includes('email')) {
+      title = 'Email Inválido';
+      message = 'O email informado não é válido ou já está cadastrado.';
+    } else if (backendMessage.toLowerCase().includes('password') || backendMessage.toLowerCase().includes('senha')) {
+      title = 'Senha Inválida';
+      message = 'A senha informada não atende aos requisitos.';
+    } else if (backendMessage.toLowerCase().includes('dateofbirth') || backendMessage.toLowerCase().includes('data')) {
+      title = 'Data de Nascimento Inválida';
+      message = 'A data de nascimento informada não é válida.';
+    } else if (backendMessage) {
+      // Se há uma mensagem mas não é específica, mostra ela
+      message = backendMessage;
+    }
+    
+    setErrorTitle(title);
+    setErrorMessage(message);
+    setShowErrorModal(true);
   } finally {
     setLoading(false);
   }
@@ -472,6 +571,13 @@ const handleRegister = async () => {
           visible={showAgeRestrictionModal} 
           onClose={() => setShowAgeRestrictionModal(false)} 
         />
+
+        <ErrorModal
+          visible={showErrorModal}
+          onClose={() => setShowErrorModal(false)}
+          title={errorTitle}
+          message={errorMessage}
+        />
       </ScrollView>
     </SafeAreaView>
   );
@@ -508,4 +614,3 @@ const styles = StyleSheet.create({
     top: 37,
   },
 });
-
