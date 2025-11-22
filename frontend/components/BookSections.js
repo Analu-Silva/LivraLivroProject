@@ -1,8 +1,14 @@
 import React from "react";
 import { View, Text, FlatList, Image, TouchableOpacity, StyleSheet } from "react-native";
 
-export default function BookSections({ section, navigation }) {
-  const formatPrice = (price) => `R$ ${price.toFixed(2).replace(".", ",")}`;
+export default function BookSections({ section, navigation, currency = 'BRL' }) {
+  const formatPrice = (price) => {
+    if (currency === 'USD') {
+
+      return `US$ ${price.toFixed(2)}`;
+    }
+    return `R$ ${price.toFixed(2).replace(".", ",")}`;
+  };
 
   const renderBook = ({ item }) => (
     <TouchableOpacity

@@ -6,13 +6,13 @@ import flagUsa from "../assets/bandeira eua.png";
 import sacola from "../assets/sacola de compras.png";
 import profilePhoto from "../assets/perfil sem foto.png";
 
-export default function Header({ currency, setCurrency, navigation, setShowLoginModal }) {
+export default function Header({ currency, setCurrency, navigation, setShowLoginModal, onToggleCurrency }) {
   return (
     <View style={styles.header}>
       <Image source={require("../assets/logo.png")} style={styles.logo} />
 
       <View style={styles.right}>
-        <TouchableOpacity onPress={() => setCurrency(currency === "BRL" ? "USD" : "BRL")}>
+        <TouchableOpacity onPress={() => (onToggleCurrency ? onToggleCurrency() : setCurrency(currency === "BRL" ? "USD" : "BRL"))}>
           <Image source={currency === "BRL" ? flagBr : flagUsa} style={styles.flag} />
         </TouchableOpacity>
 

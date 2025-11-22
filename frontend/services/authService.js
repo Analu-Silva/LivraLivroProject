@@ -32,7 +32,24 @@ const response = await fetch(`${API_BASE_URL}/auth/signin`, {
 });
 
 if (!response.ok) {
-    throw new Error('Erro ao fazer login');
+        // Try to obtain error details from the backend
+        let details = null;
+        try {
+            const txt = await response.text();
+            // try parse JSON
+            try {
+                details = JSON.parse(txt);
+            } catch (e) {
+                details = txt;
+            }
+        } catch (e) {
+            // ignore
+        }
+
+        const message = (details && details.message) || (typeof details === 'string' ? details : null) || `Erro ao fazer login (${response.status})`;
+        const err = new Error(message);
+        err.status = response.status;
+        throw err;
 }
 
 return await response.json();

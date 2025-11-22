@@ -168,8 +168,8 @@ export default function HomeScreen({ requireLoginOnBookClick = false }) {
   }, []);
 
   const handleToggleCurrency = async () => {
+    
     const newCurrency = currency === "BRL" ? "USD" : "BRL";
-    // If switching to USD, call currency service to convert all prices.
     if (newCurrency === "USD") {
       try {
         setLoading(true);
@@ -199,7 +199,6 @@ export default function HomeScreen({ requireLoginOnBookClick = false }) {
         setLoading(false);
       }
     } else {
-      // switching back to BRL: restore original prices
       setBookSections(originalBookSections);
       setCurrency(newCurrency);
     }

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -7,21 +7,35 @@ import {
   Image,
   SafeAreaView,
   ScrollView,
+  Modal,
 } from "react-native";
 import CustomInput from "../components/CustomInput";
 import BackButton from "../components/BackButton";
 import { signin } from '../services/authService';
 import { Alert, ActivityIndicator } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const primaryColor = "#B431F4";
 
 // Validação simples de e-mail
 const isValidEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
-export default function LoginScreen({ navigation }) {
+export default function LoginScreen({ navigation, route }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [isBagModalVisible, setIsBagModalVisible] = useState(false);
+  const [showErrorModal, setShowErrorModal] = useState(false);
+  const [errorTitle, setErrorTitle] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
+
+  useEffect(() => {
+    // Se vier da tela de cadastro, preencher o email e notificar o usuário
+    if (route && route.params && route.params.fromRegister && route.params.email) {
+      setEmail(route.params.email);
+      Alert.alert('Cadastro', 'Cadastro realizado com sucesso. Faça login.');
+    }
+  }, [route]);
 
   const emailIsValid = isValidEmail(email);
   const passwordIsValid = password.length >= 8;
@@ -36,10 +50,52 @@ export default function LoginScreen({ navigation }) {
     try {
       const response = await signin(email, password);
       console.log('Login bem-sucedido:', response);
-      // Função que salvaria o userId em algum lugar (AsyncStorage depois)
+      // Salvar token/userId/nome no AsyncStorage, se o backend retornar
+      const possibleToken = response?.token || response?.accessToken || response?.access_token || response?.jwt || response?.data?.token || response?.data?.accessToken;
+      if (possibleToken) {
+        try {
+          await AsyncStorage.setItem('userToken', String(possibleToken));
+        } catch (e) {
+          console.warn('Erro salvando token em AsyncStorage', e);
+        }
+      }
+
+      const userId = response?.id || response?.userId || response?.data?.id || response?.data?.userId;
+      if (userId) {
+        try {
+          await AsyncStorage.setItem('userId', String(userId));
+        } catch (e) {
+          console.warn('Erro salvando userId em AsyncStorage', e);
+        }
+      }
+
+      const userName = response?.name || response?.data?.name || response?.user?.name;
+      if (userName) {
+        try {
+          await AsyncStorage.setItem('userName', String(userName));
+        } catch (e) {
+          console.warn('Erro salvando userName em AsyncStorage', e);
+        }
+      }
+
       navigation.navigate("Home");
     } catch (error) {
-      Alert.alert('Erro no Login', error.message || 'Email ou senha inválidos');
+      let title = 'Erro no Login';
+      let message = error.message || 'Email ou senha inválidos';
+      const status = error && error.status ? error.status : null;
+
+      if (status === 404 || /not found|não encontrado|not_found/i.test(message)) {
+        title = 'Email não encontrado';
+        message = 'O email informado não está cadastrado.';
+      } else if (status === 401 || /senha|password|invalid credentials|credenciais/i.test(message)) {
+        title = 'Senha incorreta';
+        message = 'A senha informada está incorreta.';
+        setPassword('');
+      }
+
+      setErrorTitle(title);
+      setErrorMessage(message);
+      setShowErrorModal(true);
     } finally {
       setLoading(false);
     }
@@ -53,8 +109,13 @@ export default function LoginScreen({ navigation }) {
       >
         {/* HEADER */}
         <View style={styles.header}>
-          <BackButton onPress={() => navigation.navigate("Register")} />
+          <BackButton onPress={() => navigation.goBack()} />
           <Text style={styles.title}>Login</Text>
+          <TouchableOpacity
+            style={styles.bagIconButton}
+            onPress={() => setIsBagModalVisible(true)}
+          >
+          </TouchableOpacity>
         </View>
 
         {/* LOGO */}
@@ -100,11 +161,58 @@ export default function LoginScreen({ navigation }) {
               styles.loginButton,
               (!emailIsValid || !passwordIsValid) && styles.disabledButton,
             ]}
-            onPress={() => navigation.navigate("Home")}
-            disabled={!emailIsValid || !passwordIsValid}
+            onPress={handleLogin}
+            disabled={!emailIsValid || !passwordIsValid || loading}
           >
-            <Text style={styles.loginButtonText}>Logar</Text>
+            {loading ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <Text style={styles.loginButtonText}>Logar</Text>
+            )}
           </TouchableOpacity>
+
+          <Modal
+            visible={isBagModalVisible}
+            transparent
+            animationType="slide"
+            onRequestClose={() => setIsBagModalVisible(false)}
+          >
+            <View style={styles.modalOverlay}>
+              <View style={styles.modalContent}>
+                <Text style={styles.modalTitle}>Modal de Bloqueio</Text>
+                <Text style={styles.modalText}>
+                  Exemplo: aqui você pode mostrar uma mensagem de bloqueio
+                  ao clicar no ícone de sacola.
+                </Text>
+                <TouchableOpacity
+                  style={styles.closeModalButton}
+                  onPress={() => setIsBagModalVisible(false)}
+                >
+                  <Text style={styles.closeModalButtonText}>Fechar</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </Modal>
+
+          <Modal
+            visible={showErrorModal}
+            transparent
+            animationType="fade"
+            onRequestClose={() => setShowErrorModal(false)}
+          >
+            <View style={styles.modalOverlay}>
+              <View style={styles.modalContent}>
+                <Text style={styles.modalTitle}>{errorTitle || 'Erro'}</Text>
+                <Text style={styles.modalText}>{errorMessage}</Text>
+                <TouchableOpacity
+                  style={styles.closeModalButton}
+                  onPress={() => setShowErrorModal(false)}
+                >
+                  <Text style={styles.closeModalButtonText}>Ok</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </Modal>
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -167,5 +275,48 @@ const styles = StyleSheet.create({
   },
   disabledButton: {
     opacity: 0.5,
+  },
+  bagIconButton: {
+    marginLeft: 'auto',
+    padding: 6,
+  },
+  bagIcon: {
+    fontSize: 22,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  modalContent: {
+    width: '100%',
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: 20,
+    alignItems: 'center',
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    marginBottom: 10,
+    color: primaryColor,
+  },
+  modalText: {
+    fontSize: 14,
+    color: '#333',
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  closeModalButton: {
+    backgroundColor: primaryColor,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+  },
+  closeModalButtonText: {
+    color: '#fff',
+    fontWeight: '700',
   },
 });

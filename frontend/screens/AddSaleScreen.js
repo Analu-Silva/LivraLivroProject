@@ -8,6 +8,9 @@ import {
   StyleSheet,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import * as ImagePicker from 'expo-image-picker';
+import { uploadToCloudinary, createBook } from '../services/bookService';
+import { ActivityIndicator, Image } from 'react-native';
 import BackButton from "../components/BackButton";
 
 const primaryPurple = "#B431F4";
@@ -24,26 +27,43 @@ const AddSaleScreen = ({ navigation }) => {
   const [isbn, setIsbn] = useState("");
   const [genres, setGenres] = useState([]);
   const [showGenreMenu, setShowGenreMenu] = useState(false);
+  const [images, setImages] = useState([]); // { uri, uploadedUrl?, uploading? }
+  const [submitting, setSubmitting] = useState(false);
+  const [imageUploadError, setImageUploadError] = useState('');
+  const [formError, setFormError] = useState('');
+  const [author, setAuthor] = useState('');
+  const [languageInput, setLanguageInput] = useState('');
 
+  // Use objects with ids so we can send genresId to backend
   const genreOptions = [
-    "Ação",
-    "Romance",
-    "Drama",
-    "Fantasia",
-    "Terror",
-    "Suspense",
-    "Ficção Científica",
-    "Comédia",
+    { id: 1, name: 'Ação' },
+    { id: 2, name: 'Romance' },
+    { id: 3, name: 'Drama' },
+    { id: 4, name: 'Fantasia' },
+    { id: 5, name: 'Terror' },
+    { id: 6, name: 'Suspense' },
+    { id: 7, name: 'Ficção Científica' },
+    { id: 8, name: 'Comédia' },
   ];
 
-  const addGenre = (genre) => {
-    if (!genres.includes(genre)) {
-      setGenres([...genres, genre]);
+  const addGenre = (genreObj) => {
+    if (!genres.find(g => g.id === genreObj.id)) {
+      setGenres([...genres, genreObj]);
     }
   };
 
-  const removeGenre = (genre) => {
-    setGenres(genres.filter((g) => g !== genre));
+  const resolveLanguageId = (input) => {
+    if (!input) return 1;
+    const v = String(input).trim().toLowerCase();
+    if (/^\d+$/.test(v)) return Number(v);
+    if (v.includes('port')) return 1;
+    if (v.includes('ing') || v.includes('english')) return 2;
+    if (v.includes('esp') || v.includes('span')) return 3;
+    return 1;
+  };
+
+  const removeGenre = (genreObj) => {
+    setGenres(genres.filter((g) => g.id !== genreObj.id));
   };
 
   return (
@@ -60,9 +80,68 @@ const AddSaleScreen = ({ navigation }) => {
 
       {/* Fotos */}
       <Text style={styles.labelPhoto}>Fotos</Text>
-      <TouchableOpacity style={styles.photoBox}>
+      <TouchableOpacity style={styles.photoBox} onPress={async () => {
+        // Pick image and upload
+        try {
+          const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+          if (permission.status !== 'granted') {
+            alert('Permissão para acessar as imagens é necessária.');
+            return;
+          }
+
+          const result = await ImagePicker.launchImageLibraryAsync({
+            mediaTypes: (ImagePicker.MediaType && ImagePicker.MediaType.Images) || ImagePicker.MediaTypeOptions?.Images || ImagePicker.MediaTypeOptions.Images,
+            allowsEditing: true,
+            quality: 0.8,
+          });
+
+          if (result.canceled === true || result.cancelled === true) return;
+
+          let selectedUri;
+          if (result.assets && result.assets.length > 0) {
+            selectedUri = result.assets[0].uri;
+          } else if (result.uri) {
+            selectedUri = result.uri;
+          }
+
+          if (!selectedUri) {
+            alert('Não foi possível obter a imagem selecionada.');
+            return;
+          }
+
+          // Add preview item
+          const newItem = { uri: selectedUri, uploading: true };
+          setImages(prev => [newItem, ...prev]);
+
+          try {
+            const uploadedUrl = await uploadToCloudinary(selectedUri);
+            setImages(prev => prev.map(it => it.uri === selectedUri ? { ...it, uploading: false, uploadedUrl } : it));
+            setImageUploadError('');
+          } catch (err) {
+            console.warn('Erro ao enviar imagem', err);
+            setImages(prev => prev.map(it => it.uri === selectedUri ? { ...it, uploading: false } : it));
+            // set inline error instead of popup
+            setImageUploadError('Falha ao enviar imagem. Tente novamente.');
+          }
+
+        } catch (err) {
+          console.warn('Erro pick image', err);
+        }
+      }}>
         <Ionicons name="add" size={45} color={primaryPurple} />
       </TouchableOpacity>
+      <View style={{ flexDirection: 'row', gap: 8, marginVertical: 8 }}>
+        {images.map((it) => (
+          <View key={it.uri} style={{ width: 80, height: 80, borderRadius: 8, overflow: 'hidden', backgroundColor: '#fff', justifyContent: 'center', alignItems: 'center' }}>
+            {it.uploading ? (
+              <ActivityIndicator />
+            ) : (
+              <Image source={{ uri: it.uploadedUrl || it.uri }} style={{ width: '100%', height: '100%' }} />
+            )}
+          </View>
+        ))}
+      </View>
+      {imageUploadError ? <Text style={styles.errorText}>{imageUploadError}</Text> : null}
       <Text style={styles.photoNote}>Frente e verso são obrigatórios</Text>
 
       {/* Título */}
@@ -74,8 +153,8 @@ const AddSaleScreen = ({ navigation }) => {
 
       <View style={styles.genreContainer}>
         {genres.map((genre) => (
-          <View key={genre} style={styles.genreButton}>
-            <Text style={styles.genreText}>{genre}</Text>
+          <View key={genre.id} style={styles.genreButton}>
+            <Text style={styles.genreText}>{genre.name}</Text>
             <TouchableOpacity onPress={() => removeGenre(genre)}>
               <Ionicons name="close" size={15} color={primaryPurple} />
             </TouchableOpacity>
@@ -83,7 +162,7 @@ const AddSaleScreen = ({ navigation }) => {
         ))}
       </View>
 
-      <View style={{ position: "relative", marginBottom: 12 }}>
+      <View style={{ position: "relative", marginBottom: 12, zIndex: 9999 }}>
         <TouchableOpacity
           style={styles.dropdown}
           onPress={() => setShowGenreMenu(!showGenreMenu)}
@@ -100,10 +179,10 @@ const AddSaleScreen = ({ navigation }) => {
         </TouchableOpacity>
 
         {showGenreMenu && (
-          <View style={styles.dropdownMenu}>
+          <View style={[styles.dropdownMenu, { zIndex: 9999 }]}> 
             {genreOptions.map((option) => (
               <TouchableOpacity
-                key={option}
+                key={option.id}
                 style={styles.dropdownItem}
                 onPress={() => {
                   addGenre(option);
@@ -113,13 +192,13 @@ const AddSaleScreen = ({ navigation }) => {
                 <Text
                   style={[
                     styles.dropdownItemText,
-                    genres.includes(option) && {
+                    genres.find(g => g.id === option.id) && {
                       color: primaryPurple,
                       fontWeight: "600",
                     },
                   ]}
                 >
-                  {option}
+                  {option.name}
                 </Text>
               </TouchableOpacity>
             ))}
@@ -141,7 +220,7 @@ const AddSaleScreen = ({ navigation }) => {
 
         <View style={styles.half}>
           <Text style={styles.label}>Status</Text>
-          <View style={{ position: "relative" }}>
+          <View style={{ position: "relative", marginBottom: 12,}}>
             <TouchableOpacity
               style={styles.dropdown}
               onPress={() => setShowOptions(!showOptions)}
@@ -152,7 +231,7 @@ const AddSaleScreen = ({ navigation }) => {
             </TouchableOpacity>
 
             {showOptions && (
-              <View style={styles.dropdownMenu}>
+              <View style={[styles.dropdownMenu, { zIndex: 9999 }]}>
                 {["Usado", "Novo"].map((option) => (
                   <TouchableOpacity
                     key={option}
@@ -225,6 +304,26 @@ const AddSaleScreen = ({ navigation }) => {
           />
         </View>
       </View>
+      {/*Idioma (copiado do estilo de Editora/ISBN) */}
+      <View style={styles.row}>
+        <View style={styles.half}>
+          <Text style={styles.label}>Autor</Text>
+          <TextInput
+            style={styles.input}
+            value={author}
+            onChangeText={setAuthor}
+          />
+        </View>
+
+        <View style={styles.half}>
+          <Text style={styles.label}>Idioma</Text>
+          <TextInput
+            style={styles.input}
+            value={languageInput}
+            onChangeText={setLanguageInput}
+          />
+        </View>
+      </View>
 
       {/* Descrição */}
       <Text style={styles.label}>Descrição</Text>
@@ -238,8 +337,87 @@ const AddSaleScreen = ({ navigation }) => {
       />
 
       {/* Botão principal */}
-      <TouchableOpacity style={styles.registerButton}>
-        <Text style={styles.registerText}>Registrar venda</Text>
+      <TouchableOpacity
+        style={styles.registerButton}
+        onPress={async () => {
+          if (!title || !price) {
+            setFormError('Preencha pelo menos título e preço');
+            return;
+          }
+
+          if (!author) {
+            setFormError('Preencha o nome do autor');
+            return;
+          }
+
+          if (!pages || Number(pages) < 20) {
+            setFormError('Número de páginas inválido (mínimo 20)');
+            return;
+          }
+
+          setFormError('');
+
+          setSubmitting(true);
+          try {
+            const imageUrls = [];
+            for (const it of images) {
+              if (it.uploadedUrl) {
+                imageUrls.push(it.uploadedUrl);
+              } else if (it.uri) {
+                try {
+                  const uploaded = await uploadToCloudinary(it.uri);
+                  imageUrls.push(uploaded);
+                } catch (e) {
+                  console.warn('Falha upload final', e);
+                }
+              }
+            }
+
+            const bookData = {
+              imagesUrl: imageUrls,
+              title: title,
+              price: Number(price),
+              currency: 'BRL',
+              numberOfPages: pages ? Number(pages) : undefined,
+              genresId: genres.map(g => g.id) || [], 
+              bookConditionId: status === 'Novo' ? 2 : 1,
+              numberOfYears: years ? Number(years) : undefined,
+              isbn: isbn || undefined,
+              bookLanguageId: resolveLanguageId(languageInput),
+              publisher: publisher || undefined,
+              stock: 1,
+              author: author || undefined,
+              description: description || undefined,
+            };
+
+            try {
+              const resp = await createBook(bookData);
+              setFormError('');
+              // success - navigate back
+              navigation.goBack();
+            } catch (err) {
+              console.error('Erro criando livro', err);
+              // show structured validation messages if provided
+              if (err && err.body && err.body.message) {
+                setFormError(err.body.message);
+              } else {
+                setFormError(err.message || 'Erro ao criar livro');
+              }
+            }
+          } catch (err) {
+            console.error('Erro criando livro', err);
+            setFormError(err.message || err);
+          } finally {
+            setSubmitting(false);
+          }
+        }}
+        disabled={submitting}
+      >
+        {submitting ? (
+          <ActivityIndicator color="#fff" />
+        ) : (
+          <Text style={styles.registerText}>Registrar venda</Text>
+        )}
       </TouchableOpacity>
     </ScrollView>
   );
@@ -353,8 +531,9 @@ const styles = StyleSheet.create({
     borderRadius: 15,
     borderWidth: 1,
     borderColor: primaryPurple,
-    zIndex: 10,
-    elevation: 5,
+    zIndex: 99999,
+    elevation: 99999,
+    overflow: 'visible',
     shadowColor: "#000",
     shadowOpacity: 0.1,
     shadowRadius: 5,
@@ -391,5 +570,12 @@ const styles = StyleSheet.create({
     color: "#FFF",
     fontWeight: "bold",
     fontSize: 16,
+  },
+  errorText: {
+    color: '#b00020',
+    backgroundColor: '#ffecec',
+    padding: 8,
+    borderRadius: 8,
+    marginBottom: 8,
   },
 });

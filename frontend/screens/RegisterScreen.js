@@ -370,8 +370,8 @@ const handleRegister = async () => {
       await AsyncStorage.setItem('userToken', possibleToken);
     }
 
-    // Passar o userId para a próxima tela se vier na resposta
-    navigation.navigate('Login', { userId: response.id });
+    // Passar o email e uma flag indicando que veio do cadastro
+    navigation.navigate('Login', { email: email, fromRegister: true });
     
   } catch (error) {
     console.error('Erro no cadastro:', error);
