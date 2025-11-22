@@ -17,9 +17,6 @@ public record SignupResponseDTO(
 		String cpf,
 		String phoneNumber, 
 		LocalDate dateOfBirth,
-		String userImageUrl, 
-		Integer userGenreId, 
-		String description,
 		
 		Collection<? extends GrantedAuthority> authorities,
 		boolean enabled, 

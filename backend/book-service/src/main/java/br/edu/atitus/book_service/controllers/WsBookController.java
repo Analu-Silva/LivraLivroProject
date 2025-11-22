@@ -60,6 +60,16 @@ public class WsBookController {
 			throw new SecurityException("Usuário sem permissão");
 	}
 	
+	private void validateIsbnUniquenessWithIdNull(String isbn) {
+		if (bookRepository.existsByIsbn(isbn.trim()))
+			throw new ResourceAlreadyExistsException("isbn: Já existe um livro com este isbn");
+	}
+
+	private void validateIsbnUniquenessWithIdNotNull(UUID id, String isbn) {
+		if (bookRepository.existsByIsbnAndIdNot(isbn, id))
+			throw new ResourceAlreadyExistsException("isbn: Já existe um livro com este isbn");
+	}
+	
 	private void validateImageUrlUniquenessWithId(List<String> imagesUrl) {
 		if (imagesUrl == null || imagesUrl.isEmpty()) {
 			return;
@@ -114,6 +124,7 @@ public class WsBookController {
 			@RequestHeader("X-User-Type") Integer userType) {
 
 		validateUserType(userType);
+		validateIsbnUniquenessWithIdNull(dto.isbn());
 		validateImageUrlUniquenessWithId(dto.imagesUrl());
 
 		BookEntity book = convertDto2Entity(dto);
@@ -128,6 +139,7 @@ public class WsBookController {
 			@RequestHeader("X-User-Id") UUID UserId, @RequestHeader("X-User-Type") Integer userType) {
 		
 		validateUserType(userType);
+		validateIsbnUniquenessWithIdNotNull(idBook, dto.isbn());
 		validateImageUrlUniquenessWithId(dto.imagesUrl());
 		
 		BookEntity updatebook = bookService.alterBook(idBook, dto, UserId, userType);

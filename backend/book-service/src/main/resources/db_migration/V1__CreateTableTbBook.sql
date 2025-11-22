@@ -23,7 +23,7 @@ CREATE TABLE tb_book (
 	FOREIGN KEY (book_condition_id) REFERENCES tb_book_condition (id),
 	number_of_years INTEGER NOT NULL,
 	author VARCHAR(255) NOT NULL, 
-	isbn CHAR(13),
+	isbn CHAR(13) UNIQUE,
 	book_language_id INTEGER NOT NULL,
 	FOREIGN KEY (book_language_id) REFERENCES tb_book_language (id),
 	publisher VARCHAR(255) NOT NULL,

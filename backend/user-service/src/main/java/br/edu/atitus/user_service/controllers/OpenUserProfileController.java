@@ -46,7 +46,7 @@ public class OpenUserProfileController {
 	}
 	
 	@GetMapping("/sellers")
-	public ResponseEntity<List<UserProfileEntity>> getSellerList() {
+	public ResponseEntity<List<UserProfileEntity>> getSellerList(){
 		List<UUID> sellerIds = authClient.getActiveDistinctSellers();
 		
 		if(sellerIds == null || sellerIds.isEmpty()) {

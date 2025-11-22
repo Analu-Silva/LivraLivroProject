@@ -109,7 +109,7 @@ public class UserAuthService implements UserDetailsService {
 		UUID newUserId = savedUser.getId();
 
 		UserProfileDTO profileData = new UserProfileDTO(newUserId, dto.name(), dto.phoneNumber(), dto.cpf(),
-				dto.dateOfBirth(), dto.userImageUrl(), dto.userGenreId(), dto.description());
+				dto.dateOfBirth());
 
 		try {
 			userServiceClient.createProfile(profileData);
@@ -144,9 +144,8 @@ public class UserAuthService implements UserDetailsService {
 		}
 
 		return new SignupResponseDTO(savedUser.getId(), dto.name(), savedUser.getEmail(), savedUser.getType(),
-				dto.cpf(), dto.phoneNumber(), dto.dateOfBirth(), dto.userImageUrl(), dto.userGenreId(), dto.description(), 
-				savedUser.getAuthorities(), savedUser.isEnabled(), savedUser.isAccountNonLocked(), savedUser.isAccountNonExpired(), 
-				savedUser.isCredentialsNonExpired());
+				dto.cpf(), dto.phoneNumber(), dto.dateOfBirth(), savedUser.getAuthorities(), savedUser.isEnabled(),
+				savedUser.isAccountNonLocked(), savedUser.isAccountNonExpired(), savedUser.isCredentialsNonExpired());
 	}
 
 	@Transactional

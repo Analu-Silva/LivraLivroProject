@@ -3,8 +3,6 @@ package br.edu.atitus.auth_service.dtos;
 import java.time.LocalDate;
 
 import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Past;
@@ -26,16 +24,7 @@ public record SignupDTO(
 		@NotBlank(message = "O CPF é obrigatório") @Size(min = 11, max = 11, message = "CPF deve ter 11 caracteres") String cpf,
 
 		@NotNull(message = "A data de nascimento é obrigatória") 
-		@Past(message = "Data de nascimento inválida") LocalDate dateOfBirth,
-
-		@Size(max = 2048, message = "URL da imagem muito longo") String userImageUrl,
-		
-		@Min(value = 1, message = "Escolha uma das opções fornecidas")
-		@Max(value = 3, message = "Escolha uma das opções fornecidas")
-		Integer userGenreId,
-		
-		@Size(max = 255, message = "Descrição muito longa")
-		String description) {
+		@Past(message = "Data de nascimento inválida") LocalDate dateOfBirth) {
 
 	public SignupDTO {
 
@@ -53,14 +42,6 @@ public record SignupDTO(
 
 		if (cpf != null) {
 			cpf = cpf.trim();
-		}
-		
-		if (userImageUrl != null) {
-		userImageUrl = userImageUrl.trim();
-		}
-		
-		if (description != null) {
-			description = description.trim();
 		}
 
 	}
