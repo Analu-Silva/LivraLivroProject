@@ -37,7 +37,7 @@ const OrdersScreen = ({ navigation }) => {
       >
         {/* Header */}
         <View style={styles.header}>
-          <BackButton onPress={() => navigation.navigate("Menu")} />
+          <BackButton onPress={() => navigation.goBack()} />
           <Text style={styles.headerTitle}>Seus Pedidos</Text>
         </View>
 
