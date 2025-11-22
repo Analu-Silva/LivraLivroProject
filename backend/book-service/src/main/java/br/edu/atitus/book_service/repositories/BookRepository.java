@@ -14,8 +14,6 @@ import br.edu.atitus.book_service.entities.BookEntity;
 public interface BookRepository extends JpaRepository<BookEntity, UUID> {
 	
 	boolean existsByIsbn(String isbn);
-
-	boolean existsByIsbnAndIdNot(String isbn, UUID id);
 	
 //	Optional<BookEntity> findSellerById(UUID seller);
 	
