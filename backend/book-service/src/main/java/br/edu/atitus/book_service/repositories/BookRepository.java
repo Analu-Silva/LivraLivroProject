@@ -13,10 +13,6 @@ import br.edu.atitus.book_service.entities.BookEntity;
 @Repository
 public interface BookRepository extends JpaRepository<BookEntity, UUID> {
 	
-	boolean existsByIsbn(String isbn);
-	
-//	Optional<BookEntity> findSellerById(UUID seller);
-	
 	List<BookEntity> findBooksBySeller(UUID seller);
 	
 	Page<BookEntity> findByCurrency(String currency, Pageable pageable);
