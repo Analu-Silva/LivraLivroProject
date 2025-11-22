@@ -20,6 +20,7 @@ const BookScreen = ({ route, navigation }) => {
     ],
     genres: "Fantasia, aventura, magia",
     pages: 123,
+    language: "Português",
     status: "Usado - 3 anos",
     description:
       "Na véspera do início das aulas, a estranha criatura Dobby aparece em seu quarto e o alerta sobre um grande perigo em Hogwarts.",
@@ -105,6 +106,9 @@ const BookScreen = ({ route, navigation }) => {
             </Text>
             <Text style={styles.infoText}>
               <Text style={styles.infoLabel}>Número de páginas: </Text>{book.pages}
+            </Text>
+            <Text style={styles.infoText}>
+              <Text style={styles.infoLabel}>Idioma: </Text>{book.language}
             </Text>
             <Text style={styles.infoText}>
               <Text style={styles.infoLabel}>Status: </Text>{book.status}
