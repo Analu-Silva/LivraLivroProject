@@ -47,7 +47,7 @@ const PurchaseScreen = ({ navigation }) => {
       >
         {/* Header */}
         <View style={styles.header}>
-          <BackButton onPress={() => navigation.navigate("Sacola")} />
+          <BackButton onPress={() => navigation.goBack()} />
           <Text style={styles.headerTitle}>Compra</Text>
         </View>
 
