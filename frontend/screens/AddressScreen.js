@@ -18,6 +18,7 @@ const AddressScreen = ({ navigation }) => {
   const [complement, setComplement] = useState("");
   const [city, setCity] = useState("");
   const [state, setState] = useState("");
+  const [neighborhood, setNeighborhood] = useState("");
 
   return (
     <View style={styles.container}>
@@ -49,6 +50,16 @@ const AddressScreen = ({ navigation }) => {
             style={styles.input}
             value={street}
             onChangeText={setStreet}
+          />
+        </View>
+
+        {/* Bairro */}
+        <View style={styles.section}>
+          <Text style={styles.label}>Bairro</Text>
+          <TextInput
+            style={styles.input}
+            value={neighborhood}
+            onChangeText={setNeighborhood}
           />
         </View>
 
