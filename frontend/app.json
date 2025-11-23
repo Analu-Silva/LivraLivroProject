@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "Fake Store App",
-    "slug": "fake-store-app",
+    "name": "LivraLivro",
+    "slug": "livralivro",
     "version": "1.0.0",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
@@ -26,7 +26,7 @@
       "favicon": "./assets/favicon.png",
       "bundler": "metro"
     },
-    "scheme": "fake-store-app",
+    "scheme": "livralivro",
     "plugins": []
   }
 }

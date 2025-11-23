@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -6,37 +6,97 @@ import {
   TouchableOpacity,
   ScrollView,
   StyleSheet,
+  ActivityIndicator,
+  Alert,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import BackButton from "../components/BackButton";
+import { getCart, removeCartItem } from "../services/cartService";
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const primaryPurple = "#B431F4";
 
 const CartScreen = ({ navigation }) => {
-  const cartItems = [
-    {
-      id: 1,
-      title: "Harry Potter e a Câmara Secreta",
-      price: 35.0,
-      image:
-        "https://m.media-amazon.com/images/I/81YOuOGFCJL._AC_UF894,1000_QL80_.jpg",
-      seller: "Ana Lima",
-      sellerPhoto: "https://cdn-icons-png.flaticon.com/512/219/219969.png",
-      stars: 5,
-    },
-    {
-      id: 2,
-      title: "Oratória para Advogados e Estudantes",
-      price: 35.0,
-      image:
-        "https://m.media-amazon.com/images/I/71z+2iDQjJL._AC_UF894,1000_QL80_.jpg",
-      seller: "Vítor Jaime",
-      sellerPhoto: "https://cdn-icons-png.flaticon.com/512/219/219983.png",
-      stars: 4,
-    },
-  ];
+  const [cartItems, setCartItems] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [removing, setRemoving] = useState(null);
 
-  const total = cartItems.reduce((acc, item) => acc + item.price, 0);
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('focus', () => {
+      loadCart();
+    });
+
+    return unsubscribe;
+  }, [navigation]);
+
+  const loadCart = async () => {
+    try {
+      setLoading(true);
+      const userId = await AsyncStorage.getItem('userId');
+
+      if (!userId) {
+        console.log('Usuário não logado, carrinho vazio');
+        setCartItems([]);
+        return;
+      }
+
+      const cartData = await getCart('BRL');
+      console.log('Carrinho carregado:', cartData);
+
+      // Formata dados do carrinho
+      const formattedItems = cartData.items && Array.isArray(cartData.items)
+        ? cartData.items.map(item => ({
+            id: item.id,
+            bookId: item.book?.id,
+            title: item.book?.title || 'Sem título',
+            price: Number(item.book?.price) || 0,
+            image: item.book?.imagesUrls && Array.isArray(item.book.imagesUrls) && item.book.imagesUrls.length > 0
+              ? item.book.imagesUrls[0].imageUrl
+              : null,
+            seller: item.book?.author || 'Vendedor desconhecido',
+            stars: 5, // Padrão
+            quantity: item.quantity || 1,
+          }))
+        : [];
+
+      setCartItems(formattedItems);
+    } catch (error) {
+      console.error('Erro ao carregar carrinho:', error);
+      setCartItems([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRemoveItem = async (itemId) => {
+    try {
+      setRemoving(itemId);
+      await removeCartItem(itemId);
+      setCartItems(prev => prev.filter(item => item.id !== itemId));
+      Alert.alert('Sucesso', 'Item removido do carrinho');
+    } catch (error) {
+      console.error('Erro ao remover item:', error);
+      Alert.alert('Erro', 'Não foi possível remover o item');
+    } finally {
+      setRemoving(null);
+    }
+  };
+
+  const total = cartItems.reduce((acc, item) => acc + (item.price * item.quantity), 0);
+
+  if (loading) {
+    return (
+      <View style={styles.container}>
+        <View style={styles.header}>
+          <BackButton onPress={() => navigation.goBack()} />
+          <Text style={styles.headerTitle}>Sacola</Text>
+        </View>
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+          <ActivityIndicator size="large" color={primaryPurple} />
+        </View>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -46,69 +106,98 @@ const CartScreen = ({ navigation }) => {
       >
         {/* Header */}
         <View style={styles.header}>
-          <BackButton onPress={() => navigation.goBack()} />
+          <BackButton onPress={() => navigation.reset({ index: 0, routes: [{ name: 'Home' }] })} />
           <Text style={styles.headerTitle}>Sacola</Text>
         </View>
 
-        {/* Itens */}
-        {cartItems.map((item) => (
-          <View key={item.id} style={styles.card}>
-            <Image source={{ uri: item.image }} style={styles.bookImage} />
-            <View style={styles.infoContainer}>
-              <Text style={styles.priceText}>R${item.price.toFixed(2)}</Text>
-              <Text style={styles.titleText} numberOfLines={2}>
-                {item.title}
-              </Text>
-              <View style={styles.sellerContainer}>
-                <Image
-                  source={{ uri: item.sellerPhoto }}
-                  style={styles.sellerPhoto}
-                />
-                <View>
-                  <Text style={styles.sellerName}>{item.seller}</Text>
-                  <View style={styles.starsContainer}>
-                    {[...Array(item.stars)].map((_, index) => (
-                      <Ionicons
-                        key={index}
-                        name="star"
-                        size={15}
-                        color={primaryPurple}
-                      />
-                    ))}
+        {cartItems.length === 0 ? (
+          <View style={styles.emptyContainer}>
+            <Text style={styles.emptyText}>Sua sacola está vazia</Text>
+            <TouchableOpacity
+              style={styles.continueShoppingButton}
+              onPress={() => navigation.navigate('Home')}
+            >
+              <Text style={styles.continueShoppingText}>Continuar comprando</Text>
+            </TouchableOpacity>
+          </View>
+        ) : (
+          <>
+            {/* Itens */}
+            {cartItems.map((item) => (
+              <View key={item.id} style={styles.card}>
+                {item.image ? (
+                  <Image source={{ uri: item.image }} style={styles.bookImage} />
+                ) : (
+                  <View style={[styles.bookImage, styles.placeholderImage]}>
+                    <Text style={styles.placeholderText}>Sem imagem</Text>
                   </View>
+                )}
+                <View style={styles.infoContainer}>
+                  <Text style={styles.priceText}>R${item.price.toFixed(2)}</Text>
+                  <Text style={styles.titleText} numberOfLines={2}>
+                    {item.title}
+                  </Text>
+                  <View style={styles.sellerContainer}>
+                    <View style={styles.sellerPhoto}>
+                      <Text style={styles.sellerPhotoText}>?</Text>
+                    </View>
+                    <View>
+                      <Text style={styles.sellerName}>{item.seller}</Text>
+                      <View style={styles.starsContainer}>
+                        {[...Array(item.stars)].map((_, index) => (
+                          <Ionicons
+                            key={index}
+                            name="star"
+                            size={15}
+                            color={primaryPurple}
+                          />
+                        ))}
+                      </View>
+                    </View>
+                  </View>
+                  <TouchableOpacity
+                    onPress={() => handleRemoveItem(item.id)}
+                    disabled={removing === item.id}
+                  >
+                    <Text style={styles.removeText}>
+                      {removing === item.id ? 'Removendo...' : 'Remover'}
+                    </Text>
+                  </TouchableOpacity>
                 </View>
               </View>
-            </View>
-          </View>
-        ))}
+            ))}
 
-        {/* Adicionar mais */}
-        <TouchableOpacity
-          style={styles.addButton}
-          onPress={() => navigation.navigate("Home")}
-        >
-          <Ionicons name="add" size={45} color={primaryPurple} />
-        </TouchableOpacity>
+            {/* Adicionar mais */}
+            <TouchableOpacity
+              style={styles.addButton}
+              onPress={() => navigation.navigate('Home')}
+            >
+              <Ionicons name="add" size={45} color={primaryPurple} />
+            </TouchableOpacity>
+          </>
+        )}
       </ScrollView>
 
       {/* Footer */}
-      <View style={styles.footer}>
-        <View style={styles.footerTop}>
-          <View style={styles.footerRow}>
-            <Text style={styles.footerLabel}>Total</Text>
-            <Text style={styles.footerValue}>
-              R$ {total.toFixed(2).replace(".", ",")}
-            </Text>
-          </View>
+      {cartItems.length > 0 && (
+        <View style={styles.footer}>
+          <View style={styles.footerTop}>
+            <View style={styles.footerRow}>
+              <Text style={styles.footerLabel}>Total</Text>
+              <Text style={styles.footerValue}>
+                R$ {total.toFixed(2).replace(".", ",")}
+              </Text>
+            </View>
 
-          <TouchableOpacity
-            style={styles.buyButton}
-            onPress={() => navigation.navigate("Compra")}
-          >
-            <Text style={styles.buyText}>Comprar</Text>
-          </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.buyButton}
+              onPress={() => navigation.navigate("Compra", { cartItems, total })}
+            >
+              <Text style={styles.buyText}>Comprar</Text>
+            </TouchableOpacity>
+          </View>
         </View>
-      </View>
+      )}
     </View>
   );
 };
@@ -147,15 +236,68 @@ const styles = StyleSheet.create({
     shadowRadius: 5,
     elevation: 2,
   },
-  bookImage: { width: 98, height: 94, borderRadius: 10 },
-  infoContainer: { flex: 1, marginLeft: 10, justifyContent: "center" },
-  priceText: { fontSize: 20, fontWeight: "bold", color: "#000" },
-  titleText: { fontSize: 17, color: "#333", marginTop: 2 },
-  sellerContainer: { flexDirection: "row", alignItems: "center", marginTop: 8 },
-  sellerPhoto: { width: 26, height: 26, borderRadius: 13, marginRight: 6 },
-  sellerName: { fontSize: 12, color: primaryPurple, fontWeight: "600" },
-  starsContainer: { flexDirection: "row" },
-
+  bookImage: { 
+    width: 98, 
+    height: 94, 
+    borderRadius: 10,
+    backgroundColor: '#f0f0f0',
+  },
+  placeholderImage: {
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  placeholderText: {
+    color: '#999',
+    fontSize: 12,
+  },
+  infoContainer: { 
+    flex: 1, 
+    marginLeft: 10, 
+    justifyContent: "center" 
+  },
+  priceText: { 
+    fontSize: 20, 
+    fontWeight: "bold", 
+    color: "#000" 
+  },
+  titleText: { 
+    fontSize: 17, 
+    color: "#333", 
+    marginTop: 2 
+  },
+  sellerContainer: { 
+    flexDirection: "row", 
+    alignItems: "center", 
+    marginTop: 8 
+  },
+  sellerPhoto: { 
+    width: 26, 
+    height: 26, 
+    borderRadius: 13,
+    backgroundColor: primaryPurple,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 6 
+  },
+  sellerPhotoText: {
+    color: '#FFF',
+    fontSize: 12,
+    fontWeight: 'bold',
+  },
+  sellerName: { 
+    fontSize: 12, 
+    color: primaryPurple, 
+    fontWeight: "600" 
+  },
+  starsContainer: { 
+    flexDirection: "row" 
+  },
+  removeText: {
+    fontSize: 12,
+    color: '#b00020',
+    marginTop: 4,
+    fontWeight: '600',
+  },
   addButton: {
     borderWidth: 2,
     borderColor: primaryPurple,
@@ -169,7 +311,28 @@ const styles = StyleSheet.create({
     marginVertical: 10,
     alignSelf: "flex-start",
   },
-
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 80,
+  },
+  emptyText: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 20,
+  },
+  continueShoppingButton: {
+    backgroundColor: primaryPurple,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 20,
+  },
+  continueShoppingText: {
+    color: '#FFF',
+    fontWeight: '600',
+  },
   footer: {
     backgroundColor: "#FFF",
     paddingVertical: 20,
@@ -182,14 +345,24 @@ const styles = StyleSheet.create({
     shadowRadius: 10,
     elevation: 8,
   },
-  footerTop: { marginBottom: 15 },
+  footerTop: { 
+    marginBottom: 15 
+  },
   footerRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     marginBottom: 6,
   },
-  footerLabel: { fontSize: 19, fontWeight: "bold", color: "#000" },
-  footerValue: { fontSize: 19, fontWeight: "bold", color: "#000" },
+  footerLabel: { 
+    fontSize: 19, 
+    fontWeight: "bold", 
+    color: "#000" 
+  },
+  footerValue: { 
+    fontSize: 19, 
+    fontWeight: "bold", 
+    color: "#000" 
+  },
   buyButton: {
     backgroundColor: primaryPurple,
     width: 181,
@@ -200,5 +373,9 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     marginTop: 10,
   },
-  buyText: { color: "#FFF", fontSize: 16, fontWeight: "bold" },
+  buyText: { 
+    color: "#FFF", 
+    fontSize: 16, 
+    fontWeight: "bold" 
+  },
 });

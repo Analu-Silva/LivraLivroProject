@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -7,37 +7,105 @@ import {
   ScrollView,
   StyleSheet,
   Modal,
+  ActivityIndicator,
+  Alert,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import BackButton from "../components/BackButton";
+import { createOrder } from "../services/orderService";
+import { clearCart } from "../services/cartService";
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const primaryPurple = "#B431F4";
 const successGreen = "#a4dc22ff"; 
 
-const PurchaseScreen = ({ navigation }) => {
+const CheckoutScreen = ({ route, navigation }) => {
+  const cartData = route?.params || {};
+  const cartItems = cartData.cartItems || [];
+  const cartTotal = cartData.total || 0;
+
   const [payment, setPayment] = useState("Pix");
   const [showSuccessModal, setShowSuccessModal] = useState(false);
-
-  const cartItems = [
-    {
-      id: 1,
-      title: "Harry Potter e a Câmara Secreta",
-      price: 35.0,
-      image:
-        "https://m.media-amazon.com/images/I/81YOuOGFCJL._AC_UF894,1000_QL80_.jpg",
-    },
-    {
-      id: 2,
-      title: "Oratória para Advogados e Estudantes",
-      price: 35.0,
-      image:
-        "https://m.media-amazon.com/images/I/71z+2iDQjJL._AC_UF894,1000_QL80_.jpg",
-    },
-  ];
+  const [creatingOrder, setCreatingOrder] = useState(false);
+  const [address, setAddress] = useState({
+    street: "Rua Paraná",
+    number: "320",
+    city: "Passo Fundo",
+    state: "RS",
+    zipCode: "12345678",
+    country: "Brasil",
+  });
 
   const frete = 10;
-  const totalLivros = cartItems.reduce((acc, item) => acc + item.price, 0);
+  const totalLivros = cartItems.reduce((acc, item) => acc + (item.price * item.quantity), 0);
   const total = totalLivros + frete;
+
+  // Se não houver itens, redireciona
+  useEffect(() => {
+    if (cartItems.length === 0) {
+      Alert.alert('Carrinho vazio', 'Adicione itens ao carrinho antes de prosseguir');
+      navigation.goBack();
+    }
+  }, []);
+
+  const handleConfirmOrder = async () => {
+    try {
+      setCreatingOrder(true);
+
+      const userId = await AsyncStorage.getItem('userId');
+      if (!userId) {
+        Alert.alert('Erro', 'Você precisa estar logado para fazer um pedido');
+        return;
+      }
+
+      // Prepara dados do pedido
+      const orderData = {
+        userId,
+        items: cartItems.map(item => ({
+          bookId: item.bookId,
+          quantity: item.quantity,
+          price: item.price,
+        })),
+        paymentMethod: payment,
+        deliveryAddress: {
+          street: address.street,
+          number: address.number,
+          city: address.city,
+          state: address.state,
+          zipCode: address.zipCode,
+          country: address.country,
+        },
+        totalAmount: total,
+        status: 'PENDENTE',
+      };
+
+      console.log('Criando pedido:', orderData);
+
+      // Cria pedido
+      const result = await createOrder(orderData);
+      console.log('Pedido criado:', result);
+
+      // Limpa carrinho
+      try {
+        await clearCart();
+      } catch (e) {
+        console.warn('Erro ao limpar carrinho:', e);
+      }
+
+      // Mostra modal de sucesso
+      setShowSuccessModal(true);
+
+    } catch (error) {
+      console.error('Erro ao criar pedido:', error);
+      Alert.alert('Erro', 'Não foi possível confirmar o pedido. Tente novamente.');
+    } finally {
+      setCreatingOrder(false);
+    }
+  };
+
+  if (cartItems.length === 0) {
+    return null;
+  }
 
   return (
     <View style={styles.container}>
@@ -47,19 +115,26 @@ const PurchaseScreen = ({ navigation }) => {
       >
         {/* Header */}
         <View style={styles.header}>
-          <BackButton onPress={() => navigation.navigate("Sacola")} />
+          <BackButton onPress={() => navigation.navigate('Sacola')} />
           <Text style={styles.headerTitle}>Compra</Text>
         </View>
 
         {/* Itens */}
         {cartItems.map((item) => (
           <View key={item.id} style={styles.card}>
-            <Image source={{ uri: item.image }} style={styles.bookImage} />
+            {item.image ? (
+              <Image source={{ uri: item.image }} style={styles.bookImage} />
+            ) : (
+              <View style={[styles.bookImage, styles.placeholderImage]}>
+                <Text style={styles.placeholderText}>Sem imagem</Text>
+              </View>
+            )}
             <View style={styles.infoContainer}>
               <Text style={styles.priceText}>R${item.price.toFixed(2)}</Text>
               <Text style={styles.titleText} numberOfLines={2}>
                 {item.title}
               </Text>
+              <Text style={styles.quantityText}>Qtd: {item.quantity}</Text>
             </View>
           </View>
         ))}
@@ -88,10 +163,10 @@ const PurchaseScreen = ({ navigation }) => {
         <Text style={styles.sectionTitle}>Endereço de entrega</Text>
         <View style={styles.addressContainer}>
           <Text style={styles.addressText}>
-            Rua Paraná 320, Passo Fundo, RS, 12345678, Brasil
+            {address.street} {address.number}, {address.city}, {address.state}, {address.zipCode}, {address.country}
           </Text>
           <TouchableOpacity
-            onPress={() => navigation.navigate("Endereco")}
+            onPress={() => Alert.alert('Alterar endereço', 'Funcionalidade em desenvolvimento')}
           >
             <Text style={styles.changeAddressText}>
               Alterar endereço de entrega
@@ -124,31 +199,36 @@ const PurchaseScreen = ({ navigation }) => {
         </View>
 
         <TouchableOpacity
-          style={styles.confirmButton}
-          onPress={() => setShowSuccessModal(true)}
+          style={[styles.confirmButton, creatingOrder && styles.disabledButton]}
+          onPress={handleConfirmOrder}
+          disabled={creatingOrder}
         >
-          <Text style={styles.confirmText}>Confirmar Pedido</Text>
+          {creatingOrder ? (
+            <ActivityIndicator color="#FFF" />
+          ) : (
+            <Text style={styles.confirmText}>Confirmar Pedido</Text>
+          )}
         </TouchableOpacity>
       </View>
 
-      {/* POP-UP DE SUCESSO COM CORAÇÃO INLINE */}
+      {/* Modal de Sucesso */}
       <Modal visible={showSuccessModal} transparent animationType="fade">
         <View style={styles.modalBackground}>
           <View style={styles.modalBox}>
-
-            {/* TEXTO + CORAÇÃO INLINE */}
             <Text style={styles.modalMessageText}>
               Compra realizada com sucesso! Obrigada por usar o nosso aplicativo{" "}
               <Ionicons name="heart" size={20} color={successGreen} />
             </Text>
 
-            {/* Botão verde */}
             <TouchableOpacity
               style={styles.modalButton}
               onPress={() => {
                 setShowSuccessModal(false);
                 setTimeout(() => {
-                  navigation.navigate("Home");
+                  navigation.reset({
+                    index: 0,
+                    routes: [{ name: "Home" }],
+                  });
                 }, 300);
               }}
             >
@@ -161,8 +241,7 @@ const PurchaseScreen = ({ navigation }) => {
   );
 };
 
-export default PurchaseScreen;
-
+export default CheckoutScreen;
 
 const styles = StyleSheet.create({
   container: {
@@ -183,7 +262,6 @@ const styles = StyleSheet.create({
     color: primaryPurple,
     marginLeft: 10,
   },
-
   card: {
     flexDirection: "row",
     alignItems: "center",
@@ -199,11 +277,39 @@ const styles = StyleSheet.create({
     shadowRadius: 5,
     elevation: 2, 
   },
-  bookImage: { width: 98, height: 94, borderRadius: 10 },
-  infoContainer: { flex: 1, marginLeft: 10 },
-  priceText: { fontSize: 20, fontWeight: "bold", color: "#000" },
-  titleText: { fontSize: 17, color: "#333", marginTop: 2 },
-
+  bookImage: { 
+    width: 98, 
+    height: 94, 
+    borderRadius: 10,
+    backgroundColor: '#f0f0f0',
+  },
+  placeholderImage: {
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  placeholderText: {
+    color: '#999',
+    fontSize: 12,
+  },
+  infoContainer: { 
+    flex: 1, 
+    marginLeft: 10 
+  },
+  priceText: { 
+    fontSize: 20, 
+    fontWeight: "bold", 
+    color: "#000" 
+  },
+  titleText: { 
+    fontSize: 17, 
+    color: "#333", 
+    marginTop: 2 
+  },
+  quantityText: {
+    fontSize: 12,
+    color: '#666',
+    marginTop: 4,
+  },
   sectionTitle: {
     fontSize: 23,
     fontWeight: "bold",
@@ -213,7 +319,6 @@ const styles = StyleSheet.create({
     color: "#000",
     paddingLeft: 10,
   },
-
   paymentOptions: {
     flexDirection: "row",
     alignItems: "center",
@@ -223,8 +328,15 @@ const styles = StyleSheet.create({
     gap: 55,
     paddingLeft: 10,
   },
-  paymentOption: { flexDirection: "row", alignItems: "center", gap: 8 },
-  paymentText: { fontSize: 20, color: "#000" },
+  paymentOption: { 
+    flexDirection: "row", 
+    alignItems: "center", 
+    gap: 8 
+  },
+  paymentText: { 
+    fontSize: 20, 
+    color: "#000" 
+  },
   radioCircle: {
     width: 12,
     height: 12,
@@ -235,7 +347,6 @@ const styles = StyleSheet.create({
   radioSelected: {
     backgroundColor: primaryPurple,
   },
-
   addressContainer: {
     marginHorizontal: 20,
     marginTop: 12,
@@ -252,7 +363,6 @@ const styles = StyleSheet.create({
     marginTop: 10,
     textDecorationLine: "underline",
   },
-
   footer: {
     backgroundColor: "#FFF",
     paddingVertical: 20,
@@ -265,19 +375,32 @@ const styles = StyleSheet.create({
     shadowRadius: 10,
     elevation: 8,
   },
-
-  footerTop: { marginBottom: 15 },
+  footerTop: { 
+    marginBottom: 15 
+  },
   footerRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     marginBottom: 6,
   },
-
-  footerLabel: { fontSize: 17, color: "#000" },
-  footerValue: { fontSize: 17, color: "#000" },
-  footerTotalLabel: { fontSize: 19, fontWeight: "bold", color: "#000" },
-  footerTotalValue: { fontSize: 19, fontWeight: "bold", color: "#000" },
-
+  footerLabel: { 
+    fontSize: 17, 
+    color: "#000" 
+  },
+  footerValue: { 
+    fontSize: 17, 
+    color: "#000" 
+  },
+  footerTotalLabel: { 
+    fontSize: 19, 
+    fontWeight: "bold", 
+    color: "#000" 
+  },
+  footerTotalValue: { 
+    fontSize: 19, 
+    fontWeight: "bold", 
+    color: "#000" 
+  },
   confirmButton: {
     backgroundColor: primaryPurple,
     width: 181,
@@ -287,7 +410,14 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  confirmText: { color: "#FFF", fontSize: 16, fontWeight: "bold" },
+  confirmText: { 
+    color: "#FFF", 
+    fontSize: 16, 
+    fontWeight: "bold" 
+  },
+  disabledButton: {
+    opacity: 0.5,
+  },
   modalBackground: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.4)",
@@ -311,22 +441,6 @@ const styles = StyleSheet.create({
     lineHeight: 22,
     marginBottom: 10,
   },
-  inlineMessage: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    paddingHorizontal: 15,
-    marginBottom: 20,
-  },
-
-  modalText: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#000",
-    textAlign: "center",
-    lineHeight: 22,
-  },
-
   modalButton: {
     backgroundColor: successGreen,
     width: 160,

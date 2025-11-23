@@ -6,6 +6,9 @@ import {
   TouchableOpacity,
   ScrollView,
   StyleSheet,
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from 'expo-image-picker';
@@ -27,14 +30,13 @@ const AddSaleScreen = ({ navigation }) => {
   const [isbn, setIsbn] = useState("");
   const [genres, setGenres] = useState([]);
   const [showGenreMenu, setShowGenreMenu] = useState(false);
-  const [images, setImages] = useState([]); // { uri, uploadedUrl?, uploading? }
+  const [images, setImages] = useState([]);
   const [submitting, setSubmitting] = useState(false);
   const [imageUploadError, setImageUploadError] = useState('');
   const [formError, setFormError] = useState('');
   const [author, setAuthor] = useState('');
   const [languageInput, setLanguageInput] = useState('');
-
-  // Use objects with ids so we can send genresId to backend
+  
   const genreOptions = [
     { id: 1, name: 'Ação' },
     { id: 2, name: 'Romance' },
@@ -67,11 +69,15 @@ const AddSaleScreen = ({ navigation }) => {
   };
 
   return (
-    <ScrollView
-      style={styles.container}
-      showsVerticalScrollIndicator={false}
-      contentContainerStyle={{ paddingBottom: 100 }}
+    <KeyboardAvoidingView
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      style={{ flex: 1 }}
     >
+      <ScrollView
+        style={styles.container}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: 100 }}
+      >
       {/* Header */}
       <View style={styles.header}>
         <BackButton onPress={() => navigation.goBack()} />
@@ -81,7 +87,6 @@ const AddSaleScreen = ({ navigation }) => {
       {/* Fotos */}
       <Text style={styles.labelPhoto}>Fotos</Text>
       <TouchableOpacity style={styles.photoBox} onPress={async () => {
-        // Pick image and upload
         try {
           const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
           if (permission.status !== 'granted') {
@@ -109,7 +114,6 @@ const AddSaleScreen = ({ navigation }) => {
             return;
           }
 
-          // Add preview item
           const newItem = { uri: selectedUri, uploading: true };
           setImages(prev => [newItem, ...prev]);
 
@@ -120,7 +124,6 @@ const AddSaleScreen = ({ navigation }) => {
           } catch (err) {
             console.warn('Erro ao enviar imagem', err);
             setImages(prev => prev.map(it => it.uri === selectedUri ? { ...it, uploading: false } : it));
-            // set inline error instead of popup
             setImageUploadError('Falha ao enviar imagem. Tente novamente.');
           }
 
@@ -304,7 +307,8 @@ const AddSaleScreen = ({ navigation }) => {
           />
         </View>
       </View>
-      {/*Idioma (copiado do estilo de Editora/ISBN) */}
+
+      {/* Autor e Idioma */}
       <View style={styles.row}>
         <View style={styles.half}>
           <Text style={styles.label}>Autor</Text>
@@ -359,7 +363,15 @@ const AddSaleScreen = ({ navigation }) => {
 
           setSubmitting(true);
           try {
+            if (images.some(it => it.uploading)) {
+              setFormError('Aguarde o upload das imagens antes de enviar.');
+              setSubmitting(false);
+              return;
+            }
+
             const imageUrls = [];
+            
+            // Processa imagens se houver
             for (const it of images) {
               if (it.uploadedUrl) {
                 imageUrls.push(it.uploadedUrl);
@@ -371,6 +383,18 @@ const AddSaleScreen = ({ navigation }) => {
                   console.warn('Falha upload final', e);
                 }
               }
+            }
+
+            if (images.length === 0) {
+              setFormError('Insira pelo menos 1 foto do livro.');
+              setSubmitting(false);
+              return;
+            }
+
+            if (imageUrls.length === 0) {
+              setFormError('As fotos não foram enviadas. Tente novamente.');
+              setSubmitting(false);
+              return;
             }
 
             const bookData = {
@@ -390,14 +414,17 @@ const AddSaleScreen = ({ navigation }) => {
               description: description || undefined,
             };
 
+            console.log('Dados do livro a enviar:', bookData);
+
             try {
               const resp = await createBook(bookData);
+              console.log('Livro criado com sucesso:', resp);
               setFormError('');
-              // success - navigate back
-              navigation.goBack();
+              Alert.alert('Sucesso', 'Livro cadastrado com sucesso!', [
+                { text: 'OK', onPress: () => navigation.goBack() }
+              ]);
             } catch (err) {
               console.error('Erro criando livro', err);
-              // show structured validation messages if provided
               if (err && err.body && err.body.message) {
                 setFormError(err.body.message);
               } else {
@@ -419,7 +446,10 @@ const AddSaleScreen = ({ navigation }) => {
           <Text style={styles.registerText}>Registrar venda</Text>
         )}
       </TouchableOpacity>
+      
+      {formError ? <Text style={styles.errorText}>{formError}</Text> : null}
     </ScrollView>
+    </KeyboardAvoidingView>
   );
 };
 

@@ -99,7 +99,6 @@ Este aplicativo utiliza a **FakeStore API** para autenticação. Para testar o l
 - **Expo**: Plataforma para desenvolvimento React Native
 - **React Navigation**: Navegação entre telas
 - **Axios**: Cliente HTTP para requisições à API
-- **FakeStore API**: API externa para dados de produtos e autenticação
 
 ## 📋 Scripts Disponíveis
 

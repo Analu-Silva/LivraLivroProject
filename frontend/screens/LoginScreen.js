@@ -17,7 +17,6 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const primaryColor = "#B431F4";
 
-// Validação simples de e-mail
 const isValidEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
 export default function LoginScreen({ navigation, route }) {
@@ -30,7 +29,6 @@ export default function LoginScreen({ navigation, route }) {
   const [errorMessage, setErrorMessage] = useState('');
 
   useEffect(() => {
-    // Se vier da tela de cadastro, preencher o email e notificar o usuário
     if (route && route.params && route.params.fromRegister && route.params.email) {
       setEmail(route.params.email);
       Alert.alert('Cadastro', 'Cadastro realizado com sucesso. Faça login.');
@@ -40,7 +38,7 @@ export default function LoginScreen({ navigation, route }) {
   const emailIsValid = isValidEmail(email);
   const passwordIsValid = password.length >= 8;
 
-    const handleLogin = async () => {
+  const handleLogin = async () => {
     if (!emailIsValid || !passwordIsValid) {
       Alert.alert('Erro', 'Por favor, preencha todos os campos corretamente.');
       return;
@@ -50,35 +48,61 @@ export default function LoginScreen({ navigation, route }) {
     try {
       const response = await signin(email, password);
       console.log('Login bem-sucedido:', response);
-      // Salvar token/userId/nome no AsyncStorage, se o backend retornar
-      const possibleToken = response?.token || response?.accessToken || response?.access_token || response?.jwt || response?.data?.token || response?.data?.accessToken;
+      
+      // ✅ EXTRAIR DADOS CORRETAMENTE
+      // Backend retorna { user: { id, username, ... }, token: "..." }
+      const possibleToken = response?.token || response?.accessToken || response?.access_token || response?.jwt || response?.data?.token;
+      const possibleId = response?.user?.id || response?.id || response?.userId || response?.data?.id || response?.data?.user?.id;
+      const possibleName = response?.user?.username || response?.user?.name || response?.name || response?.data?.name || response?.username;
+
+      console.log('Extração de dados:');
+      console.log('Token:', possibleToken);
+      console.log('Id:', possibleId);
+      console.log('Name:', possibleName);
+
+      // ✅ SALVAR NO ASYNCSTORAGE
+      const savePromises = [];
+
       if (possibleToken) {
-        try {
-          await AsyncStorage.setItem('userToken', String(possibleToken));
-        } catch (e) {
-          console.warn('Erro salvando token em AsyncStorage', e);
-        }
+        savePromises.push(
+          AsyncStorage.setItem('userToken', String(possibleToken)).then(() => {
+            console.log('✅ Token salvo com sucesso');
+          }).catch(e => {
+            console.warn('❌ Erro salvando token:', e);
+          })
+        );
       }
 
-      const userId = response?.id || response?.userId || response?.data?.id || response?.data?.userId;
-      if (userId) {
-        try {
-          await AsyncStorage.setItem('userId', String(userId));
-        } catch (e) {
-          console.warn('Erro salvando userId em AsyncStorage', e);
-        }
+      if (possibleId) {
+        savePromises.push(
+          AsyncStorage.setItem('userId', String(possibleId)).then(() => {
+            console.log('✅ UserId salvo com sucesso:', possibleId);
+          }).catch(e => {
+            console.warn('❌ Erro salvando userId:', e);
+          })
+        );
       }
 
-      const userName = response?.name || response?.data?.name || response?.user?.name;
-      if (userName) {
-        try {
-          await AsyncStorage.setItem('userName', String(userName));
-        } catch (e) {
-          console.warn('Erro salvando userName em AsyncStorage', e);
-        }
+      if (possibleName) {
+        savePromises.push(
+          AsyncStorage.setItem('userName', String(possibleName)).then(() => {
+            console.log('✅ UserName salvo com sucesso');
+          }).catch(e => {
+            console.warn('❌ Erro salvando userName:', e);
+          })
+        );
       }
 
+      // ✅ AGUARDAR TODAS AS OPERAÇÕES
+      await Promise.all(savePromises);
+
+      // ✅ VERIFICAR SE SALVOU (DEBUG)
+      const savedUserId = await AsyncStorage.getItem('userId');
+      console.log('UserId verificado após salvar:', savedUserId);
+
+      // ✅ NAVEGAR PARA HOME
       navigation.navigate("Home");
+
     } catch (error) {
       let title = 'Erro no Login';
       let message = error.message || 'Email ou senha inválidos';
