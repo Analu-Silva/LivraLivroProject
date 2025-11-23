@@ -1,0 +1,19 @@
+{
+  "name": "livralivro---tests",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test:load": "k6 run k6/scripts/load_test.js",
+    "test:spike": "k6 run k6/scripts/spike_test.js",
+    "test:stress": "k6 run k6/scripts/stress_test.js",
+    "test:functional": "k6 run k6/scripts/functional_test.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "devDependencies": {
+    "k6": "^0.0.0"
+  }
+}
