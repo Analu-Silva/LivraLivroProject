@@ -13,7 +13,7 @@ export default function BookSections({ section, navigation, currency = 'BRL' }) 
   const renderBook = ({ item }) => (
     <TouchableOpacity
       style={styles.card}
-      onPress={() => navigation.navigate("Detalhes do Livro", { id: item.id })}
+      onPress={() => navigation.navigate("Detalhes do Livro", { bookId: item.id })}
     >
       <Image source={item.image} style={styles.img} />
       <View style={styles.priceBox}>

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -9,18 +9,19 @@ import {
   SafeAreaView,
   ScrollView,
   Modal,
+  ActivityIndicator,
 } from 'react-native';
 import { Feather } from '@expo/vector-icons';
-import { createProfileDetails } from '../services/profileService';
-import { ActivityIndicator } from 'react-native';
+import { createProfileDetails, getProfileInfo, updateProfileInfo } from '../services/profileService';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useFocusEffect } from '@react-navigation/native'; //caso precise usar
+import * as ImagePicker from 'expo-image-picker';
+import { uploadToCloudinary } from '../services/bookService';
 
 
 const primaryColor = '#B431F4';
 const secondaryColor = '#a4dc22ff';
 
-export default function ProfileCreationScreen({ navigation }) {
+export default function ProfileCreationScreen({ navigation, route }) {
   const [profileImage, setProfileImage] = useState(null);
   const [gender, setGender] = useState('');
   const [description, setDescription] = useState('');
@@ -29,18 +30,32 @@ export default function ProfileCreationScreen({ navigation }) {
   const [modalVisible, setModalVisible] = useState(false);
   const [modalMessage, setModalMessage] = useState('');
 
-  React.useEffect(() => {
-    const loadUserName = async () => {
+  useEffect(() => {
+    const loadUserData = async () => {
       try {
-        const name = await AsyncStorage.getItem('userName');
-        if (name) {
-          setUserName(name);
+        const userId = await AsyncStorage.getItem('userId');
+        
+        if (userId) {
+          // Tenta carregar informações do perfil a partir do servidor
+          try {
+            const profileInfo = await getProfileInfo(userId);
+            if (profileInfo && profileInfo.name) {
+              setUserName(profileInfo.name);
+            } else {
+              const name = await AsyncStorage.getItem('userName');
+              setUserName(name || 'Usuário');
+            }
+          } catch (error) {
+            // Se o perfil não existir ou a requisição falhar, retorna ao AsyncStorage
+            const name = await AsyncStorage.getItem('userName');
+            setUserName(name || 'Usuário');
+          }
         }
       } catch (error) {
-        console.error('Erro ao carregar nome:', error);
+        console.error('Erro ao carregar dados:', error);
       }
     };
-    loadUserName();
+    loadUserData();
   }, []);
 
   const openModal = (msg) => {
@@ -49,7 +64,44 @@ export default function ProfileCreationScreen({ navigation }) {
   };
 
   const handleImagePick = () => {
-    openModal('Funcionalidade de escolher foto será implementada.');
+    (async () => {
+      try {
+        const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+        if (permission.status !== 'granted') {
+          openModal('Permissão de acesso à galeria negada.');
+          return;
+        }
+
+        const mediaTypesOption = ImagePicker?.MediaTypeOptions?.Images ?? ImagePicker?.MediaType?.Images ?? ImagePicker?.MediaTypeOptions?.All;
+        const result = await ImagePicker.launchImageLibraryAsync({
+          mediaTypes: mediaTypesOption,
+          allowsEditing: true,
+          quality: 0.8,
+        });
+
+        if (result.canceled === true || result.cancelled === true) return;
+
+        let selectedUri;
+        if (result.assets && result.assets.length > 0) selectedUri = result.assets[0].uri;
+        else if (result.uri) selectedUri = result.uri;
+
+        if (!selectedUri) return;
+
+        // mostra pré-visualização temporária
+        setProfileImage(selectedUri);
+
+        // envia para o Cloudinary
+        try {
+          const uploaded = await uploadToCloudinary(selectedUri);
+          setProfileImage(uploaded);
+        } catch (e) {
+          console.error('Erro upload profile image:', e);
+          openModal('Erro ao enviar a imagem. Tente novamente.');
+        }
+      } catch (e) {
+        console.warn('Erro pick image', e);
+      }
+    })();
   };
 
 const handleContinue = async () => {
@@ -58,11 +110,14 @@ const handleContinue = async () => {
     return;
   }
 
-  // Pega o userId que vem da tela RegisterScreen
-  const userId = route?.params?.userId;
-  
+  // Prefer userId from route (registration flow), otherwise fallback to stored userId
+  let userId = route?.params?.userId;
   if (!userId) {
-    openModal('Erro: userId não encontrado. Por favor, tente se registrar novamente.');
+    userId = await AsyncStorage.getItem('userId');
+  }
+
+  if (!userId) {
+    openModal('Erro: userId não encontrado. Faça login ou registre-se novamente.');
     return;
   }
 
@@ -80,6 +135,32 @@ const handleContinue = async () => {
       userGenreId: genderMap[gender] || 3,
       description: description || '',
     };
+
+    // Se houver uma URL de foto de perfil, salva nas informações do perfil para que a BookScreen possa mostrar a foto do vendedor
+    if (profileImage) {
+      try {
+        // Busca info existente para não sobrescrever campos obrigatórios do backend
+        let existing = {};
+        try { existing = await getProfileInfo(userId) || {}; } catch (e) { /* ignora */ }
+
+        const nameFromStorage = await AsyncStorage.getItem('userName');
+        const emailFromStorage = await AsyncStorage.getItem('userEmail');
+
+        const infoPayload = {
+          ...existing,
+          photo: profileImage,
+          name: existing.name || nameFromStorage || undefined,
+          email: existing.email || emailFromStorage || undefined,
+        };
+
+        // Remove chaves undefined para evitar enviá-las
+        Object.keys(infoPayload).forEach(k => infoPayload[k] === undefined && delete infoPayload[k]);
+
+        await updateProfileInfo(userId, infoPayload);
+      } catch (e) {
+        console.warn('Não foi possível atualizar info do perfil com a foto:', e);
+      }
+    }
 
     const response = await createProfileDetails(userId, detailsData);
     console.log('Detalhes do perfil criados:', response);

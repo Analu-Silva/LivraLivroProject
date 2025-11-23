@@ -1,8 +1,10 @@
 import React from "react";
+import { AuthProvider } from './contexts/AuthContext';
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { StatusBar } from "expo-status-bar";
 import { registerRootComponent } from "expo";
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Importações das suas telas
 import StartScreen from "./screens/StartScreen";
@@ -28,9 +30,21 @@ const primaryColor = "#B431F4";
 
 const Stack = createNativeStackNavigator();
 
-function App() {
+export default function App() {
+  React.useEffect(() => {
+    const clearStorage = async () => {
+      try {
+        await AsyncStorage.clear();
+        console.log('🗑️ AsyncStorage completamente limpo!');
+      } catch (error) {
+        console.error('Erro ao limpar:', error);
+      }
+    };
+    clearStorage();
+  }, []);
+
   return (
-    <>
+    <AuthProvider>
       <StatusBar style="light" backgroundColor={primaryColor} />
       <NavigationContainer>
         <Stack.Navigator
@@ -131,9 +145,8 @@ function App() {
 
         </Stack.Navigator>
       </NavigationContainer>
-    </>
+    </AuthProvider>
   );
 }
 
 registerRootComponent(App);
-export default App;

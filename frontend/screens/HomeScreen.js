@@ -7,6 +7,7 @@ import {
   ActivityIndicator,
   Alert,
   TouchableOpacity,
+  Text,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 
@@ -80,12 +81,16 @@ export default function HomeScreen({ requireLoginOnBookClick = false }) {
     const grouped = {};
 
     books.forEach(book => {
-      // Agrupa por gênero
-      const genres = book.genre || [];
-      const genreNames = genres.length > 0 
-        ? genres.map(g => {
-            // g é um objeto com { id, genre }
-            return g.genre || 'Outros';
+      // Agrupa por gênero - suporta variações de formato retornadas pela API
+      const rawGenres = book.genre || book.genres || book.genresList || [];
+      const genreNames = (Array.isArray(rawGenres) && rawGenres.length > 0)
+        ? rawGenres.map(g => {
+            if (!g && g !== 0) return 'Outros';
+            if (typeof g === 'string') return g;
+            if (typeof g === 'number') return `Gênero ${g}`;
+            if (g.genre) return g.genre;
+            if (g.name) return g.name;
+            return 'Outros';
           })
         : ['Outros'];
 
@@ -108,10 +113,31 @@ export default function HomeScreen({ requireLoginOnBookClick = false }) {
   };
 
   const formatBook = (book) => {
-    // Pega a primeira imagem
-    const imageUrl = book.imagesUrls && Array.isArray(book.imagesUrls) && book.imagesUrls.length > 0
-      ? book.imagesUrls[0].imageUrl
-      : null;
+    // Pega a primeira imagem - suporta variações no nome do campo retornado pela API
+    let imageUrl = null;
+    const possibleImageFields = [
+      'imagesUrls', 'imagesUrl', 'images', 'images_urls', 'imageUrls', 'imageUrl'
+    ];
+
+    for (const field of possibleImageFields) {
+      const val = book[field];
+      if (Array.isArray(val) && val.length > 0) {
+        // item pode ser string (url) ou objeto { imageUrl }
+        const first = val[0];
+        if (typeof first === 'string') {
+          imageUrl = first;
+          break;
+        }
+        if (first.imageUrl) {
+          imageUrl = first.imageUrl;
+          break;
+        }
+        if (first.url) {
+          imageUrl = first.url;
+          break;
+        }
+      }
+    }
 
     return {
       id: book.id,
@@ -130,8 +156,17 @@ export default function HomeScreen({ requireLoginOnBookClick = false }) {
     // Aplica filtro de gênero
     if (selectedFilter && selectedFilter.title === 'Gênero' && selectedFilter.sub) {
       filtered = filtered.filter(book => {
-        const bookGenres = book.genre || [];
-        return bookGenres.some(g => g.genre === selectedFilter.sub);
+        const rawGenres = book.genre || book.genres || book.genresList || [];
+        if (!Array.isArray(rawGenres) || rawGenres.length === 0) return false;
+
+        return rawGenres.some(g => {
+          if (!g && g !== 0) return false;
+          if (typeof g === 'string') return g === selectedFilter.sub;
+          if (typeof g === 'number') return String(g) === String(selectedFilter.sub);
+          if (g.genre) return g.genre === selectedFilter.sub;
+          if (g.name) return g.name === selectedFilter.sub;
+          return false;
+        });
       });
     }
 

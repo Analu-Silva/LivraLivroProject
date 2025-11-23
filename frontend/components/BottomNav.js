@@ -9,18 +9,18 @@ export default function BottomNav() {
   return (
     <View style={styles.wrapper}>
       <View style={styles.nav}>
-        <TouchableOpacity onPress={() => navigation.navigate("Home")}>
+        <TouchableOpacity style={styles.touchArea} onPress={() => navigation.navigate("Home")}>
           <Image
             source={require("../assets/house.png")}
             style={styles.icon}
           />
         </TouchableOpacity>
 
-        <TouchableOpacity onPress={() => navigation.navigate("Favoritos")}>
+        <TouchableOpacity style={styles.touchArea} onPress={() => navigation.navigate("Favoritos")}>
           <Ionicons name="heart" size={29} color="#B431F4" />
         </TouchableOpacity>
 
-        <TouchableOpacity onPress={() => navigation.navigate("Menu")}>
+        <TouchableOpacity style={styles.touchArea} onPress={() => navigation.navigate("Menu")}>
           <View style={styles.menu}>
             <View style={styles.line} />
             <View style={styles.line} />
@@ -48,6 +48,12 @@ const styles = StyleSheet.create({
     justifyContent: "space-around",
     alignItems: "center",
     elevation: 8,
+  },
+  // ÁREA DE TOQUE MAIOR - ADICIONE ISSO
+  touchArea: {
+    padding: 10, // Aumenta área de toque
+    justifyContent: "center",
+    alignItems: "center",
   },
   icon: { width: 23, height: 27, resizeMode: "contain" },
   iconFav: { width: 29, height: 29, resizeMode: "contain" },

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -10,6 +10,10 @@ import {
   Modal,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import * as ImagePicker from 'expo-image-picker';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { uploadToCloudinary } from '../services/bookService';
+import { getProfileInfo, updateProfileInfo, createProfileDetails, getProfileDetails, updateProfileDetails } from '../services/profileService';
 import BackButton from "../components/BackButton";
 
 const primaryPurple = "#B431F4";
@@ -22,22 +26,191 @@ export default function EditProfileScreen({ navigation }) {
   const [email, setEmail] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [description, setDescription] = useState("");
+  const [name, setName] = useState('');
+  const [loadingProfile, setLoadingProfile] = useState(true);
 
   // ✅ Modais
   const [showMissingFieldsModal, setShowMissingFieldsModal] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
 
   const handleImagePick = () => {
-    setShowSuccessModal(true); // só pra exemplo, você troca depois
+    (async () => {
+      try {
+        const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+        if (permission.status !== 'granted') {
+          setShowMissingFieldsModal(true);
+          return;
+        }
+
+        const mediaTypesOption = ImagePicker?.MediaTypeOptions?.Images ?? ImagePicker?.MediaType?.Images ?? ImagePicker?.MediaTypeOptions?.All;
+        const result = await ImagePicker.launchImageLibraryAsync({
+          mediaTypes: mediaTypesOption,
+          allowsEditing: true,
+          quality: 0.8,
+        });
+
+        if (result.canceled === true || result.cancelled === true) return;
+
+        let selectedUri;
+        if (result.assets && result.assets.length > 0) selectedUri = result.assets[0].uri;
+        else if (result.uri) selectedUri = result.uri;
+
+        if (!selectedUri) return;
+
+        // mostra pré-visualização temporária
+        setProfileImage(selectedUri);
+
+        // envia para o Cloudinary
+        try {
+          const uploaded = await uploadToCloudinary(selectedUri);
+          setProfileImage(uploaded);
+        } catch (e) {
+          console.error('Erro upload profile image:', e);
+          setShowMissingFieldsModal(true);
+        }
+      } catch (e) {
+        console.warn('Erro pick image', e);
+      }
+    })();
   };
 
   const handleSave = () => {
-    if (!phone || !email) {
-      setShowMissingFieldsModal(true);
-      return;
-    }
-    setShowSuccessModal(true);
+    (async () => {
+      try {
+        const userId = await AsyncStorage.getItem('userId');
+        if (!userId) {
+          setShowMissingFieldsModal(true);
+          return;
+        }
+
+        // Monta payload de info apenas com valores não vazios para evitar enviar campos em branco
+        const infoData = {};
+        if (name && name.trim().length > 0) infoData.name = name.trim();
+        if (email && email.trim().length > 0) infoData.email = email.trim();
+        if (profileImage) {
+          infoData.photo = profileImage;
+          infoData.image = profileImage;
+          infoData.userImageUrl = profileImage;
+          infoData.userImage = profileImage;
+        }
+
+        // Se houver algo para atualizar nas informações do perfil, mescla com as info existentes e chama o endpoint de atualização
+        if (Object.keys(infoData).length > 0) {
+          try {
+            const existingInfo = await getProfileInfo(userId).catch(() => ({}));
+            const infoPayload = { ...existingInfo, ...infoData };
+            Object.keys(infoPayload).forEach(k => infoPayload[k] === undefined && delete infoPayload[k]);
+            await updateProfileInfo(userId, infoPayload);
+          } catch (e) {
+            try { await updateProfileInfo(userId, infoData); } catch (e2) { throw e2; }
+          }
+        }
+
+        // Atualiza credenciais (senha) se fornecida
+        if (newPassword && newPassword.trim().length > 0) {
+          try {
+            // importa authService sob demanda para evitar dependências circulares
+            const { updateCredentials } = await import('../services/authService');
+            await updateCredentials(userId, { password: newPassword });
+          } catch (e) {
+            console.warn('Erro ao atualizar senha:', e);
+            // mostra modal de erro para indicar problema
+            setShowMissingFieldsModal(true);
+            return;
+          }
+        }
+
+        // atualiza detalhes (telefone, gênero, descrição) se houver algum valor
+        const detailsPayload = {};
+        if (phone && phone.trim().length > 0) detailsPayload.phone = phone.trim();
+        if (gender && gender.trim().length > 0) {
+          detailsPayload.gender = gender;
+          const genderMap = {
+            masculino: 1,
+            feminino: 2,
+            outro: 3,
+            'nao-informar': 3,
+          };
+          const mapped = genderMap[gender];
+          if (mapped) detailsPayload.userGenreId = mapped;
+        }
+        if (description && description.trim().length > 0) detailsPayload.description = description.trim();
+
+        if (Object.keys(detailsPayload).length > 0) {
+          try {
+            const existingDetails = await getProfileDetails(userId).catch(() => ({}));
+            const mergedDetails = { ...existingDetails, ...detailsPayload };
+            Object.keys(mergedDetails).forEach(k => mergedDetails[k] === undefined && delete mergedDetails[k]);
+
+            if (existingDetails && Object.keys(existingDetails).length > 0) {
+              await updateProfileDetails(userId, mergedDetails);
+            } else {
+              // cria caso não existam detalhes
+              await createProfileDetails(userId, mergedDetails);
+            }
+          } catch (e) {
+            console.warn('Erro ao atualizar/mesclar detalhes do perfil:', e);
+            // fallback: tenta atualizar com payload mínimo
+            try { await updateProfileDetails(userId, detailsPayload); } catch (_) { }
+          }
+        }
+
+        // persiste nome de exibição e foto localmente somente se fornecidos
+        if (infoData.name) await AsyncStorage.setItem('userName', infoData.name);
+        if (profileImage) await AsyncStorage.setItem('userPhoto', profileImage);
+
+        setShowSuccessModal(true);
+      } catch (e) {
+        console.error('Erro saving profile:', e);
+        setShowMissingFieldsModal(true);
+      }
+    })();
   };
+
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const userId = await AsyncStorage.getItem('userId');
+        const storedName = await AsyncStorage.getItem('userName');
+        if (storedName) setName(storedName);
+        if (!userId) {
+          setLoadingProfile(false);
+          return;
+        }
+
+        // tenta carregar perfil
+        try {
+          const info = await getProfileInfo(userId);
+          if (!mounted) return;
+          if (info) {
+            setName(info.name || storedName || '');
+            setEmail(info.email || '');
+            setProfileImage(info.photo || info.image || null);
+          }
+
+          // carrega detalhes se disponíveis
+          try {
+            const details = await getProfileDetails(userId);
+            if (!mounted) return;
+            if (details) {
+              setPhone(details.phone || '');
+              setGender(details.gender || 'feminino');
+              setDescription(details.description || '');
+            }
+          } catch (e) {
+            // ignora detalhes ausentes
+          }
+        } catch (e) {
+          console.warn('Não foi possível carregar perfil:', e.message || e);
+        }
+      } finally {
+        if (mounted) setLoadingProfile(false);
+      }
+    })();
+
+    return () => { mounted = false; };
+  }, []);
 
   const handlePhoneChange = (text) => {
     let rawText = text.replace(/\D/g, "");
@@ -83,7 +256,7 @@ export default function EditProfileScreen({ navigation }) {
       </TouchableOpacity>
 
       {/* SAUDAÇÃO */}
-      <Text style={styles.greeting}>Olá, Priscila!</Text>
+      <Text style={styles.greeting}>Olá, {name || 'usuário'}!</Text>
 
       {/* GÊNERO */}
       <Text style={styles.label}>Gênero</Text>

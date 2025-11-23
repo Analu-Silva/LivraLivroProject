@@ -1,12 +1,35 @@
 
 import React from "react";
 import { View, Image, TouchableOpacity, StyleSheet } from "react-native";
+import { useAuth } from "../contexts/AuthContext";
 import flagBr from "../assets/bandeira brasil.png";
 import flagUsa from "../assets/bandeira eua.png";
 import sacola from "../assets/sacola de compras.png";
 import profilePhoto from "../assets/perfil sem foto.png";
 
 export default function Header({ currency, setCurrency, navigation, setShowLoginModal, onToggleCurrency }) {
+  const { isAuthenticated, user } = useAuth();
+
+  const handleProfileClick = () => {
+    try {
+      console.log('🔍 isAuthenticated:', typeof isAuthenticated === 'function' ? isAuthenticated() : !!isAuthenticated);
+      console.log('🔍 user:', user);
+    } catch (e) {
+      console.warn('Erro ao verificar autenticação:', e);
+    }
+
+    const authenticated = typeof isAuthenticated === 'function' ? isAuthenticated() : !!isAuthenticated;
+    if (authenticated) {
+      navigation.navigate("ProfileCreation");
+    } else {
+      if (typeof setShowLoginModal === 'function') {
+        setShowLoginModal(true);
+      } else {
+        navigation.navigate('Login');
+      }
+    }
+  };
+
   return (
     <View style={styles.header}>
       <Image source={require("../assets/logo.png")} style={styles.logo} />
@@ -20,7 +43,7 @@ export default function Header({ currency, setCurrency, navigation, setShowLogin
           <Image source={sacola} style={styles.bag} />
         </TouchableOpacity>
 
-        <TouchableOpacity onPress={() => setShowLoginModal(true)}>
+        <TouchableOpacity onPress={handleProfileClick}>
           <Image source={profilePhoto} style={styles.profile} />
         </TouchableOpacity>
       </View>

@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, Image, TouchableOpacity, ScrollView, StyleSheet, Dimensions, ActivityIndicator, Alert } from "react-native";
+import { View, Text, Image, TouchableOpacity, ScrollView, StyleSheet, Dimensions, ActivityIndicator, Alert, Modal } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { getBookById } from "../services/bookService";
+import { getProfileInfo } from "../services/profileService";
 import { addToCart } from "../services/cartService";
+import { checkBookInWishlist, addToWishlist, removeWishlistItemByBook } from "../services/wishlistService";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const primaryPurple = "#B431F4";
@@ -18,6 +20,9 @@ const BookScreen = ({ route, navigation }) => {
   const [currentImage, setCurrentImage] = useState(0);
   const [isFavorite, setIsFavorite] = useState(false);
   const [addingToCart, setAddingToCart] = useState(false);
+  const [successModalVisible, setSuccessModalVisible] = useState(false);
+  const [errorModalVisible, setErrorModalVisible] = useState(false);
+  const [errorModalMessage, setErrorModalMessage] = useState('');
 
   useEffect(() => {
     if (bookId) {
@@ -26,7 +31,6 @@ const BookScreen = ({ route, navigation }) => {
       setLoading(false);
     }
   }, [bookId]);
-
   const loadBook = async () => {
     try {
       setLoading(true);
@@ -58,8 +62,23 @@ const BookScreen = ({ route, navigation }) => {
           : 'Status desconhecido',
         description: bookData.description || 'Sem descrição disponível',
         seller: bookData.seller,
+        sellerName: null,
+        sellerPhoto: null,
         isFavorite: false,
       };
+
+      // tenta obter o perfil do vendedor (nome/foto) quando o id do vendedor estiver presente
+      if (bookData.seller) {
+        try {
+          const profile = await getProfileInfo(bookData.seller);
+          if (profile) {
+            formattedBook.sellerName = profile.name || profile.username || null;
+            formattedBook.sellerPhoto = profile.photo || profile.image || null;
+          }
+        } catch (e) {
+          console.warn('Não foi possível obter perfil do vendedor:', e.message || e);
+        }
+      }
 
       setBook(formattedBook);
     } catch (error) {
@@ -76,8 +95,24 @@ const BookScreen = ({ route, navigation }) => {
     if (slide !== currentImage) setCurrentImage(slide);
   };
 
-  const toggleFavorite = () => {
-    setIsFavorite(!isFavorite);
+  const toggleFavorite = async () => {
+    try {
+      if (!bookId) return;
+      if (!isFavorite) {
+        // adicionar
+        await addToWishlist(bookId);
+        setIsFavorite(true);
+        // navegar para Favoritos conforme solicitado
+        navigation.navigate('Favoritos');
+      } else {
+        // remover
+        await removeWishlistItemByBook(bookId);
+        setIsFavorite(false);
+      }
+    } catch (err) {
+      console.error('Erro ao alterar favorito:', err);
+      Alert.alert('Erro', 'Não foi possível atualizar favoritos');
+    }
   };
 
   const handleAddToCart = async () => {
@@ -91,10 +126,11 @@ const BookScreen = ({ route, navigation }) => {
       }
 
       await addToCart(book.id, 1);
-      Alert.alert('Sucesso', 'Livro adicionado ao carrinho!');
+      setSuccessModalVisible(true);
     } catch (error) {
       console.error('Erro ao adicionar ao carrinho:', error);
-      Alert.alert('Erro', 'Não foi possível adicionar o livro ao carrinho');
+      setErrorModalMessage('Não foi possível adicionar o livro ao carrinho');
+      setErrorModalVisible(true);
     } finally {
       setAddingToCart(false);
     }
@@ -237,11 +273,40 @@ const BookScreen = ({ route, navigation }) => {
         <Text style={styles.sellerTitle}>Vendedor</Text>
         <View style={styles.sellerInfo}>
           <View style={styles.sellerImage}>
-            <Text style={styles.sellerImageText}>?</Text>
+            {book.sellerPhoto ? (
+              <Image source={{ uri: book.sellerPhoto }} style={{ width: 60, height: 60, borderRadius: 30 }} />
+            ) : (
+              <Text style={styles.sellerImageText}>?</Text>
+            )}
           </View>
-          <Text style={styles.sellerName}>{book.author}</Text>
+          <Text style={styles.sellerName}>{book.sellerName || book.author}</Text>
         </View>
       </View>
+      {/* Modal de sucesso */}
+      <Modal transparent animationType="fade" visible={successModalVisible} onRequestClose={() => setSuccessModalVisible(false)}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContainer}>
+            <Text style={styles.modalTitle}>Sucesso!</Text>
+            <Text style={styles.modalMessage}>Livro cadastrado com sucesso!</Text>
+            <TouchableOpacity style={styles.modalButton} onPress={() => { setSuccessModalVisible(false); }}>
+              <Text style={styles.modalButtonText}>OK</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Modal de erro */}
+      <Modal transparent animationType="fade" visible={errorModalVisible} onRequestClose={() => setErrorModalVisible(false)}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContainer}>
+            <Text style={styles.modalTitle}>Erro</Text>
+            <Text style={styles.modalMessage}>{errorModalMessage}</Text>
+            <TouchableOpacity style={styles.modalButton} onPress={() => setErrorModalVisible(false)}>
+              <Text style={styles.modalButtonText}>OK</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </ScrollView>
   );
 };
@@ -441,6 +506,31 @@ const styles = StyleSheet.create({
     color: "#000",
     fontWeight: "600",
   },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  modalContainer: {
+    backgroundColor: "#fff",
+    padding: 14,
+    borderRadius: 12,
+    alignItems: "center",
+    width: "78%",
+  },
+  modalTitle: { fontSize: 20, fontWeight: "700", color: primaryPurple, marginBottom: 8 },
+  modalMessage: { fontSize: 15, color: "#333", marginBottom: 12, textAlign: "center" },
+  modalButton: {
+    backgroundColor: primaryPurple,
+    paddingVertical: 10,
+    borderRadius: 20,
+    width: '50%',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginVertical: 6,
+  },
+  modalButtonText: { color: '#FFF', fontWeight: '700', fontSize: 15 },
 });
 
 export default BookScreen;

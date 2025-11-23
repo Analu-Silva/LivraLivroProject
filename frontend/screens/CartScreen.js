@@ -45,18 +45,42 @@ const CartScreen = ({ navigation }) => {
 
       // Formata dados do carrinho
       const formattedItems = cartData.items && Array.isArray(cartData.items)
-        ? cartData.items.map(item => ({
-            id: item.id,
-            bookId: item.book?.id,
-            title: item.book?.title || 'Sem título',
-            price: Number(item.book?.price) || 0,
-            image: item.book?.imagesUrls && Array.isArray(item.book.imagesUrls) && item.book.imagesUrls.length > 0
-              ? item.book.imagesUrls[0].imageUrl
-              : null,
-            seller: item.book?.author || 'Vendedor desconhecido',
-            stars: 5, // Padrão
-            quantity: item.quantity || 1,
-          }))
+        ? cartData.items.map(item => {
+            const book = item.book || item.bookDto || item.bookEntity || item.bookEntity?.book || item.book?.book || {};
+
+            // Extrai imagem de forma tolerante: aceita string ou objeto
+            let image = null;
+            const imgArr = book.imagesUrls || book.imagesUrl || book.images || book.imageUrls || book.image || book.coverImages || book.photos;
+            if (Array.isArray(imgArr) && imgArr.length > 0) {
+              const first = imgArr[0];
+              if (typeof first === 'string') image = first;
+              else if (first && (first.imageUrl || first.url)) image = first.imageUrl || first.url;
+              else if (first && first.secure_url) image = first.secure_url;
+            } else if (typeof imgArr === 'string') {
+              image = imgArr;
+            }
+
+            // Extrai nome do vendedor de várias possíveis propriedades
+            const sellerName = item.sellerName || item.seller?.name || book.sellerName || book.seller?.name || book.profile?.name || book.author || book.user?.name || 'Vendedor desconhecido';
+
+            // tenta extrair foto do vendedor se disponível
+            let sellerPhoto = null;
+            if (book.sellerPhoto) sellerPhoto = book.sellerPhoto;
+            else if (book.profile && (book.profile.photo || book.profile.image)) sellerPhoto = book.profile.photo || book.profile.image;
+            else if (item.seller && (item.seller.photo || item.seller.image)) sellerPhoto = item.seller.photo || item.seller.image;
+
+            return {
+              id: item.id,
+              bookId: book.id,
+              title: book.title || 'Sem título',
+              price: Number(book.price) || 0,
+              image,
+              seller: sellerName,
+              sellerPhoto,
+              stars: 5,
+              quantity: item.quantity || 1,
+            };
+          })
         : [];
 
       setCartItems(formattedItems);

@@ -362,12 +362,24 @@ const handleRegister = async () => {
 
     const response = await signup(userData);
     console.log('Cadastro bem-sucedido:', response);
-    
+
+    // Guarda name se informado
     await AsyncStorage.setItem('userName', name);
-    // Se o backend retornar um token, armazena para chamadas autenticadas
+
+    // Se o backend retornar token, userId ou email, armazena para uso posterior
     const possibleToken = response?.token || response?.accessToken || response?.access_token || response?.jwt || response?.data?.token;
     if (possibleToken) {
       await AsyncStorage.setItem('userToken', possibleToken);
+    }
+
+    const possibleUserId = response?.user?.id || response?.id || response?.userId || response?.data?.id;
+    if (possibleUserId) {
+      await AsyncStorage.setItem('userId', String(possibleUserId));
+    }
+
+    const possibleEmail = response?.user?.email || response?.email || response?.data?.email;
+    if (possibleEmail) {
+      await AsyncStorage.setItem('userEmail', String(possibleEmail));
     }
 
     // Passar o email e uma flag indicando que veio do cadastro

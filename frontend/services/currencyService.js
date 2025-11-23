@@ -31,7 +31,7 @@ try {
         return numCandidate;
       }
     } catch (e) {
-      // fallthrough
+      // continua (não foi possível parsear JSON)
     }
 
     const numberMatch = (text || '').match(/[-+]?[0-9]*\.?[0-9]+/);

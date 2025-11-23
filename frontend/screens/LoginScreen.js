@@ -14,6 +14,7 @@ import BackButton from "../components/BackButton";
 import { signin } from '../services/authService';
 import { Alert, ActivityIndicator } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useAuth } from '../contexts/AuthContext';
 
 const primaryColor = "#B431F4";
 
@@ -27,6 +28,7 @@ export default function LoginScreen({ navigation, route }) {
   const [showErrorModal, setShowErrorModal] = useState(false);
   const [errorTitle, setErrorTitle] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
+  const { login } = useAuth();
 
   useEffect(() => {
     if (route && route.params && route.params.fromRegister && route.params.email) {
@@ -48,60 +50,54 @@ export default function LoginScreen({ navigation, route }) {
     try {
       const response = await signin(email, password);
       console.log('Login bem-sucedido:', response);
+      console.log('Login bem-sucedido:', JSON.stringify(response, null, 2));
       
-      // ✅ EXTRAIR DADOS CORRETAMENTE
-      // Backend retorna { user: { id, username, ... }, token: "..." }
-      const possibleToken = response?.token || response?.accessToken || response?.access_token || response?.jwt || response?.data?.token;
-      const possibleId = response?.user?.id || response?.id || response?.userId || response?.data?.id || response?.data?.user?.id;
-      const possibleName = response?.user?.username || response?.user?.name || response?.name || response?.data?.name || response?.username;
+      // EXTRAIR DADOS CORRETAMENTE - ATUALIZADO
+      const token = response?.token || response?.accessToken || response?.access_token;
+      const userId = response?.user?.id || response?.id || response?.userId;
+      
+      // AQUI: Buscar o nome completo corretamente
+      const userName = response?.user?.name || 
+                       response?.user?.username || 
+                       response?.user?.fullName ||
+                       response?.name || 
+                       response?.fullName ||
+                       response?.username;
 
-      console.log('Extração de dados:');
-      console.log('Token:', possibleToken);
-      console.log('Id:', possibleId);
-      console.log('Name:', possibleName);
-
-      // ✅ SALVAR NO ASYNCSTORAGE
-      const savePromises = [];
-
-      if (possibleToken) {
-        savePromises.push(
-          AsyncStorage.setItem('userToken', String(possibleToken)).then(() => {
-            console.log('✅ Token salvo com sucesso');
-          }).catch(e => {
-            console.warn('❌ Erro salvando token:', e);
-          })
-        );
+      console.log('Token:', token);
+      console.log('UserId:', userId);
+      // se userId não estiver presente, tentar extrair do token JWT (se for JWT)
+      let resolvedUserId = userId;
+      if (!resolvedUserId && token) {
+        try {
+          // Apenas tenta se atob existir (ambientes web). Evita crash em React Native puro.
+          if (typeof atob === 'function') {
+            const payload = token.split('.');
+            if (payload.length >= 2) {
+              const b64 = payload[1].replace(/-/g, '+').replace(/_/g, '/');
+              const json = decodeURIComponent(atob(b64).split('').map(function(c) {
+                return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+              }).join(''));
+              const obj = JSON.parse(json);
+              resolvedUserId = obj.sub || obj.userId || obj.id || obj.nameid || obj.nameId || resolvedUserId;
+            }
+          }
+        } catch (e) {
+          // ignora se o token não for JWT ou se o ambiente não suportar atob
+        }
       }
+      console.log('UserName:', userName);
+      console.log('🔍 Response completo:', JSON.stringify(response, null, 2));
 
-      if (possibleId) {
-        savePromises.push(
-          AsyncStorage.setItem('userId', String(possibleId)).then(() => {
-            console.log('✅ UserId salvo com sucesso:', possibleId);
-          }).catch(e => {
-            console.warn('❌ Erro salvando userId:', e);
-          })
-        );
+      // USAR O AUTHCONTEXT PARA SALVAR
+      const success = await login(token, resolvedUserId || userId, userName);
+      
+      if (success) {
+        console.log('✅ Login salvo com sucesso');
+        navigation.navigate("Home");
+      } else {
+        throw new Error('Erro ao salvar dados de login');
       }
-
-      if (possibleName) {
-        savePromises.push(
-          AsyncStorage.setItem('userName', String(possibleName)).then(() => {
-            console.log('✅ UserName salvo com sucesso');
-          }).catch(e => {
-            console.warn('❌ Erro salvando userName:', e);
-          })
-        );
-      }
-
-      // ✅ AGUARDAR TODAS AS OPERAÇÕES
-      await Promise.all(savePromises);
-
-      // ✅ VERIFICAR SE SALVOU (DEBUG)
-      const savedUserId = await AsyncStorage.getItem('userId');
-      console.log('UserId verificado após salvar:', savedUserId);
-
-      // ✅ NAVEGAR PARA HOME
-      navigation.navigate("Home");
 
     } catch (error) {
       let title = 'Erro no Login';

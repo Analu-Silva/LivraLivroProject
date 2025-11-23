@@ -1,4 +1,4 @@
-import API_BASE_URL from './api';
+import API_BASE_URL, { fetchWithAuth } from './api';
 import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -113,20 +113,21 @@ export const uploadToCloudinary = async (uri) => {
 
 export const createBook = async (bookData) => {
     try {
-        const token = await AsyncStorage.getItem('userToken');
-        const userId = await AsyncStorage.getItem('userId');
-        
+        // monta cabeçalhos mantendo o padrão do vendedor (X-User-Type=1)
         const headers = { 'Content-Type': 'application/json' };
-        
-        if (token) {
-            headers['Authorization'] = `Bearer ${token}`;
-        }
-        if (userId) {
-            headers['X-User-Id'] = userId;
-            headers['X-User-Type'] = '1'; // 1 = vendedor
+        try {
+            const token = await AsyncStorage.getItem('userToken');
+            const userId = await AsyncStorage.getItem('userId');
+            if (token) headers['Authorization'] = `Bearer ${token}`;
+            if (userId) {
+                headers['X-User-Id'] = userId;
+                headers['X-User-Type'] = '1'; // 1 = vendedor
+            }
+        } catch (e) {
+              // ignora
         }
 
-        const response = await fetch(`${API_BASE_URL}/ws/books`, {
+        const response = await fetchWithAuth(`${API_BASE_URL}/ws/books`, {
             method: 'POST',
             headers,
             body: JSON.stringify(bookData),
@@ -276,20 +277,21 @@ export const searchBooks = async (searchTerm) => {
 
 export const updateBook = async (bookId, bookData) => {
     try {
-        const token = await AsyncStorage.getItem('userToken');
-        const userId = await AsyncStorage.getItem('userId');
-        
+        // monta cabeçalhos com info do vendedor
         const headers = { 'Content-Type': 'application/json' };
-        
-        if (token) {
-            headers['Authorization'] = `Bearer ${token}`;
-        }
-        if (userId) {
-            headers['X-User-Id'] = userId;
-            headers['X-User-Type'] = '1';
+        try {
+            const token = await AsyncStorage.getItem('userToken');
+            const userId = await AsyncStorage.getItem('userId');
+            if (token) headers['Authorization'] = `Bearer ${token}`;
+            if (userId) {
+                headers['X-User-Id'] = userId;
+                headers['X-User-Type'] = '1';
+            }
+        } catch (e) {
+            // ignora
         }
 
-        const response = await fetch(`${API_BASE_URL}/ws/books/${bookId}`, {
+        const response = await fetchWithAuth(`${API_BASE_URL}/ws/books/${bookId}`, {
             method: 'PATCH',
             headers,
             body: JSON.stringify(bookData),
@@ -308,20 +310,20 @@ export const updateBook = async (bookId, bookData) => {
 
 export const deleteBook = async (bookId) => {
     try {
-        const token = await AsyncStorage.getItem('userToken');
-        const userId = await AsyncStorage.getItem('userId');
-        
         const headers = { 'Content-Type': 'application/json' };
-        
-        if (token) {
-            headers['Authorization'] = `Bearer ${token}`;
-        }
-        if (userId) {
-            headers['X-User-Id'] = userId;
-            headers['X-User-Type'] = '1';
+        try {
+            const token = await AsyncStorage.getItem('userToken');
+            const userId = await AsyncStorage.getItem('userId');
+            if (token) headers['Authorization'] = `Bearer ${token}`;
+            if (userId) {
+                headers['X-User-Id'] = userId;
+                headers['X-User-Type'] = '1';
+            }
+        } catch (e) {
+            // ignora
         }
 
-        const response = await fetch(`${API_BASE_URL}/ws/books/${bookId}`, {
+        const response = await fetchWithAuth(`${API_BASE_URL}/ws/books/${bookId}`, {
             method: 'DELETE',
             headers,
         });

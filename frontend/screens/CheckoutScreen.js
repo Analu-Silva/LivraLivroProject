@@ -13,6 +13,7 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import BackButton from "../components/BackButton";
 import { createOrder } from "../services/orderService";
+import { getAddress } from "../services/addressService";
 import { clearCart } from "../services/cartService";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -48,6 +49,42 @@ const CheckoutScreen = ({ route, navigation }) => {
     }
   }, []);
 
+  // load saved delivery address from profile
+  useEffect(() => {
+    let mounted = true;
+
+    const loadAddr = async () => {
+      try {
+        const userId = await AsyncStorage.getItem('userId');
+        if (!userId) return;
+        const addr = await getAddress(userId);
+        if (!mounted) return;
+        if (addr) {
+          setAddress({
+            street: addr.street || address.street,
+            number: addr.number ? String(addr.number) : address.number,
+            city: addr.city || address.city,
+            state: addr.state || address.state,
+            zipCode: addr.zipCode || address.zipCode || addr.cep || '',
+            country: addr.country || address.country || 'Brasil',
+          });
+        }
+      } catch (e) {
+        console.warn('Não foi possível carregar endereço do perfil:', e);
+      }
+    };
+
+    // initial load
+    loadAddr();
+
+    // reload when screen focused (e.g., after editing address)
+    const unsubscribe = navigation.addListener('focus', () => {
+      loadAddr();
+    });
+
+    return () => { mounted = false; unsubscribe(); };
+  }, [navigation]);
+
   const handleConfirmOrder = async () => {
     try {
       setCreatingOrder(true);
@@ -58,6 +95,15 @@ const CheckoutScreen = ({ route, navigation }) => {
         return;
       }
 
+      // Mapear método de pagamento para o campo esperado pelo backend
+      const paymentMapping = {
+        Pix: 1,
+        'Cartão': 2,
+        Boleto: 3,
+      };
+
+      const paymentMethodId = paymentMapping[payment] || null;
+
       // Prepara dados do pedido
       const orderData = {
         userId,
@@ -66,7 +112,9 @@ const CheckoutScreen = ({ route, navigation }) => {
           quantity: item.quantity,
           price: item.price,
         })),
+        // inclui ambos os campos: legível e o id exigido pelo backend
         paymentMethod: payment,
+        paymentMethodId,
         deliveryAddress: {
           street: address.street,
           number: address.number,
@@ -166,7 +214,7 @@ const CheckoutScreen = ({ route, navigation }) => {
             {address.street} {address.number}, {address.city}, {address.state}, {address.zipCode}, {address.country}
           </Text>
           <TouchableOpacity
-            onPress={() => Alert.alert('Alterar endereço', 'Funcionalidade em desenvolvimento')}
+            onPress={() => navigation.navigate('Endereco')}
           >
             <Text style={styles.changeAddressText}>
               Alterar endereço de entrega

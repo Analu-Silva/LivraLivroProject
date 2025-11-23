@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -8,6 +8,9 @@ import {
   StyleSheet,
 } from "react-native";
 import BackButton from "../components/BackButton";
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { getAddress, createAddress, updateAddress } from "../services/addressService";
+import { Alert, ActivityIndicator } from "react-native";
 
 const primaryPurple = "#B431F4";
 
@@ -19,6 +22,74 @@ const AddressScreen = ({ navigation }) => {
   const [city, setCity] = useState("");
   const [state, setState] = useState("");
   const [neighborhood, setNeighborhood] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [addressExists, setAddressExists] = useState(false);
+
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const userId = await AsyncStorage.getItem('userId');
+        if (!userId) return;
+        const addr = await getAddress(userId);
+        if (!mounted) return;
+        if (addr) {
+          setAddressExists(true);
+          setCep(addr.zipCode || addr.cep || '');
+          setStreet(addr.street || '');
+          setNumber(addr.number ? String(addr.number) : '');
+          setComplement(addr.complement || '');
+          setCity(addr.city || '');
+          setState(addr.state || '');
+          setNeighborhood(addr.neighborhood || '');
+        }
+      } catch (e) {
+        console.warn('Erro ao carregar endereço:', e);
+      }
+    })();
+
+    return () => { mounted = false; };
+  }, []);
+
+  const handleSave = async () => {
+    try {
+      setLoading(true);
+      const userId = await AsyncStorage.getItem('userId');
+      if (!userId) {
+        Alert.alert('Erro', 'Você precisa estar logado para salvar o endereço');
+        return;
+      }
+
+      const payload = {
+        zipCode: cep,
+        cep,
+        street,
+        number: number || null,
+        complement,
+        city,
+        state,
+        neighborhood,
+        country: 'Brasil',
+      };
+
+      let result;
+      if (addressExists) {
+        result = await updateAddress(userId, payload);
+      } else {
+        result = await createAddress(userId, payload);
+      }
+
+      Alert.alert('Sucesso', 'Endereço salvo com sucesso');
+      // sinaliza para a tela anterior que o endereço foi atualizado
+      navigation.goBack();
+      return result;
+    } catch (e) {
+      console.error('Erro ao salvar endereço:', e);
+      Alert.alert('Erro', 'Não foi possível salvar o endereço. Tente novamente.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <View style={styles.container}>
@@ -105,8 +176,16 @@ const AddressScreen = ({ navigation }) => {
         </View>
 
         {/* Botão */}
-        <TouchableOpacity style={styles.saveButton}>
-          <Text style={styles.saveText}>Salvar Endereço</Text>
+        <TouchableOpacity
+          style={[styles.saveButton, loading && styles.disabledButton]}
+          onPress={handleSave}
+          disabled={loading}
+        >
+          {loading ? (
+            <ActivityIndicator color="#FFF" />
+          ) : (
+            <Text style={styles.saveText}>Salvar Endereço</Text>
+          )}
         </TouchableOpacity>
       </ScrollView>
     </View>

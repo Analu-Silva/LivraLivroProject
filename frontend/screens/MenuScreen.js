@@ -8,6 +8,8 @@ import {
 } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import BackButton from "../components/BackButton";
+import { useAuth } from "../contexts/AuthContext";
+import { deleteAccount } from "../services/authService";
 
 const primaryColor = "#B431F4";
 const secundaryColor = "#a4dc22ff";
@@ -17,21 +19,49 @@ const dangerColor = "#FF4444";
 export default function MenuScreen({ navigation }) {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [loading, setLoading] = useState(false);
+  
+  const { logout, user } = useAuth();
 
-  const confirmDelete = () => {
-    setShowDeleteModal(false);
+  const confirmLogout = async () => {
+    setShowLogoutModal(false);
+    await logout();
     navigation.reset({
       index: 0,
       routes: [{ name: "PreHome" }],
     });
   };
 
-  const confirmLogout = () => {
-    setShowLogoutModal(false);
-    navigation.reset({
-      index: 0,
-      routes: [{ name: "PreHome" }],
-    });
+  const confirmDelete = async () => {
+    if (!user?.userId) {
+      Alert.alert("Erro", "Usuário não encontrado");
+      setShowDeleteModal(false);
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await deleteAccount(user.userId);
+      await logout();
+      setShowDeleteModal(false);
+      
+      Alert.alert("Sucesso", "Conta excluída com sucesso", [
+        {
+          text: "OK",
+          onPress: () => {
+            navigation.reset({
+              index: 0,
+              routes: [{ name: "PreHome" }],
+            });
+          },
+        },
+      ]);
+    } catch (error) {
+      console.error("Erro ao excluir conta:", error);
+      Alert.alert("Erro", "Não foi possível excluir a conta. Tente novamente.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
