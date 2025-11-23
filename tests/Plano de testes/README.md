@@ -8,7 +8,7 @@ Este documento tem como objetivo definir a estratégia, escopo, ambiente, cronog
 O foco principal é garantir que o sistema funcione conforme os requisitos, oferecendo uma experiência de uso segura, estável e eficiente — tanto no **frontend** quanto no **backend**.
 
 ### 1.2 Escopo  
-Serão testadas todas as funcionalidades relacionadas à **API** (****) e à interface do usuário, abrangendo:
+Serão testadas todas as funcionalidades relacionadas à **API Gateway-Service** e à interface do usuário, abrangendo:
 
 - Requisições HTTP: `GET`, `PUT`, `POST`, `DELETE`
 - Mensagens de erro e respostas do servidor
@@ -59,10 +59,10 @@ Serão realizados testes **manuais e automatizados**.
 
 | Recurso | Descrição |
 |----------|------------|
-| **Ambiente da API** | **** (nome e URL a definir) |
-| **Backend** | Node.js / ServeRest (execução local) |
+| **Ambiente da API** | Gateway-Service |
+| **Backend** | Node.js / ServeRest (execução local) + Microsserviços executados via Docker |
 | **Frontend** | Versão atual do LivraLivro |
-| **Ferramentas** | Postman, K6, GitHub |
+| **Ferramentas** | Postman, K6, GitHub, Docker / Docker Compose |
 | **Hardware** | Capaz de simular até 200 usuários simultâneos |
 | **Controle de versão** | GitHub (repositório do projeto) |
 
@@ -147,6 +147,7 @@ Serão realizados testes **manuais e automatizados**.
 | Testes de API | Postman |
 | Testes de Performance | K6 (VSCode) |
 | Ambiente backend | Node.js / ServeRest |
+| Containerização / Execução dos microsserviços | Docker & Docker Compose |
 
 ---
 
@@ -155,5 +156,3 @@ Serão realizados testes **manuais e automatizados**.
 Este plano estabelece a base para o processo de testes da plataforma **LivraLivro**, garantindo que os principais aspectos funcionais, de desempenho e segurança sejam devidamente validados.  
 
 O plano poderá ser revisado conforme o avanço do desenvolvimento e novas necessidades identificadas pelo time.
-
----
