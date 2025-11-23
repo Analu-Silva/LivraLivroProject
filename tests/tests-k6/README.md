@@ -45,7 +45,7 @@ Generating HTML summary report...
 
 ```
 
-![Relatório de Teste Funcional](/tests-k6/functional-report.png)
+![Relatório de Teste Funcional](functional-report.png)
 
 ---
 
@@ -74,7 +74,7 @@ Generating HTML summary report...
 
 ```
 
-![Relatório de Teste de Carga](/tests-k6/load-report.png)
+![Relatório de Teste de Carga](load-report.png)
 
 ---
 
@@ -102,7 +102,7 @@ Generating HTML summary report...
 
 ```
 
-![Relatório de Spike](/tests-k6/spike-report.png)
+![Relatório de Spike](spike-report.png)
 
 ---
 
@@ -130,7 +130,7 @@ Generating HTML summary report...
 
 ```
 
-![Relatório de Teste de Estresse](/tests-k6/stress-report.png)
+![Relatório de Teste de Estresse](stress-report.png)
 
 ---
 
