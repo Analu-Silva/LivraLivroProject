@@ -170,7 +170,7 @@ public class CartService {
         
         if (item.getBookId() != null) {
             try {
-                BookResponse bookResponse = bookClient.getBookByIdWithCurrency(item.getBookId(), targetCurrency);
+                BookResponse bookResponse = bookClient.getBookById(item.getBookId());
                 if (bookResponse != null) {
                     BookDTO bookDTO = convertBookResponseToDTO(bookResponse);
                     itemDTO.setBook(bookDTO);
@@ -187,12 +187,14 @@ public class CartService {
                         itemDTO.setConvertedPrice(currencyResponse.getConvertedValue());
                         bookDTO.setConvertedPrice(currencyResponse.getConvertedValue());
                     } else {
+                        // Se for a mesma moeda, usa o preço original
                         itemDTO.setConvertedPrice(bookDTO.getPrice());
                         bookDTO.setConvertedPrice(bookDTO.getPrice());
                     }
                 }
             } catch (Exception e) {
-                throw new RuntimeException("Erro ao buscar livro: " + e.getMessage(), e);
+                System.out.println("Erro ao buscar livro " + item.getBookId() + ": " + e.getMessage());
+                e.printStackTrace();
             }
         }
         
