@@ -7,7 +7,7 @@ import {
   ScrollView,
   StyleSheet,
   ActivityIndicator,
-  Alert,
+  Modal,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import BackButton from "../components/BackButton";
@@ -20,6 +20,8 @@ const CartScreen = ({ navigation }) => {
   const [cartItems, setCartItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [removing, setRemoving] = useState(null);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [showErrorModal, setShowErrorModal] = useState(false);
 
   useEffect(() => {
     const unsubscribe = navigation.addListener('focus', () => {
@@ -43,12 +45,10 @@ const CartScreen = ({ navigation }) => {
       const cartData = await getCart('BRL');
       console.log('Carrinho carregado:', cartData);
 
-      // Formata dados do carrinho
       const formattedItems = cartData.items && Array.isArray(cartData.items)
         ? cartData.items.map(item => {
             const book = item.book || item.bookDto || item.bookEntity || item.bookEntity?.book || item.book?.book || {};
 
-            // Extrai imagem de forma tolerante: aceita string ou objeto
             let image = null;
             const imgArr = book.imagesUrls || book.imagesUrl || book.images || book.imageUrls || book.image || book.coverImages || book.photos;
             if (Array.isArray(imgArr) && imgArr.length > 0) {
@@ -60,11 +60,8 @@ const CartScreen = ({ navigation }) => {
               image = imgArr;
             }
 
-            // Extrai nome do vendedor de várias possíveis propriedades
             const sellerName = item.sellerName || item.seller?.name || book.sellerName || book.seller?.name || book.profile?.name || book.author || book.user?.name || 'Vendedor desconhecido';
 
-            // tenta extrair foto do vendedor se disponível (backend não retorna no cart)
-            // TODO: considerar buscar foto via getProfileDetails quando sellerId estiver disponível
             let sellerPhoto = null;
             if (book.sellerPhoto) sellerPhoto = book.sellerPhoto;
             else if (book.profile && (book.profile.photo || book.profile.image)) sellerPhoto = book.profile.photo || book.profile.image;
@@ -98,10 +95,10 @@ const CartScreen = ({ navigation }) => {
       setRemoving(itemId);
       await removeCartItem(itemId);
       setCartItems(prev => prev.filter(item => item.id !== itemId));
-      Alert.alert('Sucesso', 'Item removido do carrinho');
+      setShowSuccessModal(true);
     } catch (error) {
       console.error('Erro ao remover item:', error);
-      Alert.alert('Erro', 'Não foi possível remover o item');
+      setShowErrorModal(true);
     } finally {
       setRemoving(null);
     }
@@ -125,11 +122,7 @@ const CartScreen = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 100 }}
-      >
-        {/* Header */}
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 100 }}>
         <View style={styles.header}>
           <BackButton onPress={() => navigation.reset({ index: 0, routes: [{ name: 'Home' }] })} />
           <Text style={styles.headerTitle}>Sacola</Text>
@@ -138,16 +131,13 @@ const CartScreen = ({ navigation }) => {
         {cartItems.length === 0 ? (
           <View style={styles.emptyContainer}>
             <Text style={styles.emptyText}>Sua sacola está vazia</Text>
-            <TouchableOpacity
-              style={styles.continueShoppingButton}
-              onPress={() => navigation.navigate('Home')}
-            >
+            <TouchableOpacity style={styles.continueShoppingButton} onPress={() => navigation.navigate('Home')}>
               <Text style={styles.continueShoppingText}>Continuar comprando</Text>
             </TouchableOpacity>
           </View>
         ) : (
           <>
-            {/* Itens */}
+          
             {cartItems.map((item) => (
               <View key={item.id} style={styles.card}>
                 {item.image ? (
@@ -162,28 +152,8 @@ const CartScreen = ({ navigation }) => {
                   <Text style={styles.titleText} numberOfLines={2}>
                     {item.title}
                   </Text>
-                  <View style={styles.sellerContainer}>
-                    <View style={styles.sellerPhoto}>
-                      <Text style={styles.sellerPhotoText}>?</Text>
-                    </View>
-                    <View>
-                      <Text style={styles.sellerName}>{item.seller}</Text>
-                      <View style={styles.starsContainer}>
-                        {[...Array(item.stars)].map((_, index) => (
-                          <Ionicons
-                            key={index}
-                            name="star"
-                            size={15}
-                            color={primaryPurple}
-                          />
-                        ))}
-                      </View>
-                    </View>
-                  </View>
-                  <TouchableOpacity
-                    onPress={() => handleRemoveItem(item.id)}
-                    disabled={removing === item.id}
-                  >
+                  <Text style={styles.titleText} numberOfLines={2}>{item.title}</Text>
+                  <TouchableOpacity onPress={() => handleRemoveItem(item.id)} disabled={removing === item.id}>
                     <Text style={styles.removeText}>
                       {removing === item.id ? 'Removendo...' : 'Remover'}
                     </Text>
@@ -192,37 +162,37 @@ const CartScreen = ({ navigation }) => {
               </View>
             ))}
 
-            {/* Adicionar mais */}
-            <TouchableOpacity
-              style={styles.addButton}
-              onPress={() => navigation.navigate('Home')}
-            >
-              <Ionicons name="add" size={45} color={primaryPurple} />
-            </TouchableOpacity>
           </>
         )}
       </ScrollView>
 
-      {/* Footer */}
-      {cartItems.length > 0 && (
-        <View style={styles.footer}>
-          <View style={styles.footerTop}>
-            <View style={styles.footerRow}>
-              <Text style={styles.footerLabel}>Total</Text>
-              <Text style={styles.footerValue}>
-                R$ {total.toFixed(2).replace(".", ",")}
-              </Text>
-            </View>
+        {/* Modal Sucesso */}
 
-            <TouchableOpacity
-              style={styles.buyButton}
-              onPress={() => navigation.navigate("Compra", { cartItems, total })}
-            >
-              <Text style={styles.buyText}>Comprar</Text>
+
+
+      <Modal transparent visible={showSuccessModal} animationType="fade">
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalCard}>
+            <Text style={styles.modalTitle}>Sucesso</Text>
+            <Text style={styles.modalText}>Item removido do carrinho</Text>
+            <TouchableOpacity style={styles.modalButton} onPress={() => setShowSuccessModal(false)}>
+              <Text style={styles.modalButtonText}>OK</Text>
             </TouchableOpacity>
           </View>
         </View>
-      )}
+      </Modal>
+      {/* Modal Erro */}
+      <Modal transparent visible={showErrorModal} animationType="fade">
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalCard}>
+            <Text style={[styles.modalTitle, { color: '#b00020' }]}>Erro</Text>
+            <Text style={styles.modalText}>Não foi possível remover o item</Text>
+            <TouchableOpacity style={styles.modalButton} onPress={() => setShowErrorModal(false)}>
+              <Text style={styles.modalButtonText}>OK</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };
@@ -230,177 +200,45 @@ const CartScreen = ({ navigation }) => {
 export default CartScreen;
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#FFF",
-    paddingTop: 20, 
+  container:{flex:1,backgroundColor:"#FFF",paddingTop:20},
+
+  modalOverlay:{
+    flex:1,
+    backgroundColor:'rgba(0,0,0,0.5)',
+    justifyContent:'center',
+    alignItems:'center'
   },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginTop: 30, 
-    marginBottom: 20,
-    paddingHorizontal: 20, 
+
+  modalCard:{
+    backgroundColor:'#FFF',
+    padding:20,
+    borderRadius:15,
+    width:'80%',
+    alignItems:'center'
+
   },
-  headerTitle: {
-    fontSize: 24,
-    fontWeight: "700",
-    color: primaryPurple,
-    marginLeft: 10,
+  modalTitle:{
+    fontSize:18,
+    fontWeight:'bold',
+    color:primaryPurple,
+    marginBottom:10
   },
-  card: {
-    flexDirection: "row",
-    backgroundColor: "#FFF",
-    borderRadius: 15,
-    padding: 10,
-    marginHorizontal: 20, 
-    marginBottom: 10,
-    shadowColor: "#000",
-    shadowOpacity: 0.05,
-    shadowOffset: { width: 0, height: 2 },
-    shadowRadius: 5,
-    elevation: 2,
+
+  modalText:{
+    fontSize:14,
+    textAlign:'center',
+    marginBottom:20
   },
-  bookImage: { 
-    width: 98, 
-    height: 94, 
-    borderRadius: 10,
-    backgroundColor: '#f0f0f0',
+
+  modalButton:{
+    backgroundColor:primaryPurple,
+    paddingHorizontal:25,
+    paddingVertical:8,
+    borderRadius:20
   },
-  placeholderImage: {
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  placeholderText: {
-    color: '#999',
-    fontSize: 12,
-  },
-  infoContainer: { 
-    flex: 1, 
-    marginLeft: 10, 
-    justifyContent: "center" 
-  },
-  priceText: { 
-    fontSize: 20, 
-    fontWeight: "bold", 
-    color: "#000" 
-  },
-  titleText: { 
-    fontSize: 17, 
-    color: "#333", 
-    marginTop: 2 
-  },
-  sellerContainer: { 
-    flexDirection: "row", 
-    alignItems: "center", 
-    marginTop: 8 
-  },
-  sellerPhoto: { 
-    width: 26, 
-    height: 26, 
-    borderRadius: 13,
-    backgroundColor: primaryPurple,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 6 
-  },
-  sellerPhotoText: {
-    color: '#FFF',
-    fontSize: 12,
-    fontWeight: 'bold',
-  },
-  sellerName: { 
-    fontSize: 12, 
-    color: primaryPurple, 
-    fontWeight: "600" 
-  },
-  starsContainer: { 
-    flexDirection: "row" 
-  },
-  removeText: {
-    fontSize: 12,
-    color: '#b00020',
-    marginTop: 4,
-    fontWeight: '600',
-  },
-  addButton: {
-    borderWidth: 2,
-    borderColor: primaryPurple,
-    borderStyle: "dashed",
-    borderRadius: 15,
-    alignItems: "center",
-    justifyContent: "center",
-    width: 98,
-    height: 94,
-    marginHorizontal: 20,
-    marginVertical: 10,
-    alignSelf: "flex-start",
-  },
-  emptyContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingVertical: 80,
-  },
-  emptyText: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#333',
-    marginBottom: 20,
-  },
-  continueShoppingButton: {
-    backgroundColor: primaryPurple,
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 20,
-  },
-  continueShoppingText: {
-    color: '#FFF',
-    fontWeight: '600',
-  },
-  footer: {
-    backgroundColor: "#FFF",
-    paddingVertical: 20,
-    paddingHorizontal: 25,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: -2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 10,
-    elevation: 8,
-  },
-  footerTop: { 
-    marginBottom: 15 
-  },
-  footerRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 6,
-  },
-  footerLabel: { 
-    fontSize: 19, 
-    fontWeight: "bold", 
-    color: "#000" 
-  },
-  footerValue: { 
-    fontSize: 19, 
-    fontWeight: "bold", 
-    color: "#000" 
-  },
-  buyButton: {
-    backgroundColor: primaryPurple,
-    width: 181,
-    height: 41,
-    borderRadius: 30,
-    alignSelf: "center",
-    alignItems: "center",
-    justifyContent: "center",
-    marginTop: 10,
-  },
-  buyText: { 
-    color: "#FFF", 
-    fontSize: 16, 
-    fontWeight: "bold" 
-  },
+
+  modalButtonText:{
+    color:'#FFF',
+    fontWeight:'bold'
+  }
 });
