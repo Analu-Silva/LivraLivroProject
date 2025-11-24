@@ -84,15 +84,10 @@ export default function EditProfileScreen({ navigation }) {
         }
 
         // Monta payload de info apenas com valores não vazios para evitar enviar campos em branco
+        // NOTA: foto de perfil é salva em DETAILS, não em INFO
         const infoData = {};
         if (name && name.trim().length > 0) infoData.name = name.trim();
         if (email && email.trim().length > 0) infoData.email = email.trim();
-        if (profileImage) {
-          infoData.photo = profileImage;
-          infoData.image = profileImage;
-          infoData.userImageUrl = profileImage;
-          infoData.userImage = profileImage;
-        }
 
         // Se houver algo para atualizar nas informações do perfil, mescla com as info existentes e chama o endpoint de atualização
         if (Object.keys(infoData).length > 0) {
@@ -120,8 +115,11 @@ export default function EditProfileScreen({ navigation }) {
           }
         }
 
-        // atualiza detalhes (telefone, gênero, descrição) se houver algum valor
+        // atualiza detalhes (telefone, gênero, descrição e FOTO) se houver algum valor
         const detailsPayload = {};
+        if (profileImage) {
+          detailsPayload.userImageUrl = profileImage;  // Backend aceita userImageUrl em details
+        }
         if (phone && phone.trim().length > 0) detailsPayload.phone = phone.trim();
         if (gender && gender.trim().length > 0) {
           detailsPayload.gender = gender;

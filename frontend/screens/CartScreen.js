@@ -63,7 +63,8 @@ const CartScreen = ({ navigation }) => {
             // Extrai nome do vendedor de várias possíveis propriedades
             const sellerName = item.sellerName || item.seller?.name || book.sellerName || book.seller?.name || book.profile?.name || book.author || book.user?.name || 'Vendedor desconhecido';
 
-            // tenta extrair foto do vendedor se disponível
+            // tenta extrair foto do vendedor se disponível (backend não retorna no cart)
+            // TODO: considerar buscar foto via getProfileDetails quando sellerId estiver disponível
             let sellerPhoto = null;
             if (book.sellerPhoto) sellerPhoto = book.sellerPhoto;
             else if (book.profile && (book.profile.photo || book.profile.image)) sellerPhoto = book.profile.photo || book.profile.image;

@@ -70,10 +70,21 @@ const BookScreen = ({ route, navigation }) => {
       // tenta obter o perfil do vendedor (nome/foto) quando o id do vendedor estiver presente
       if (bookData.seller) {
         try {
+          // Busca nome no info
           const profile = await getProfileInfo(bookData.seller);
           if (profile) {
             formattedBook.sellerName = profile.name || profile.username || null;
-            formattedBook.sellerPhoto = profile.photo || profile.image || null;
+          }
+          
+          // Busca foto no details (backend salva foto em details, não em info)
+          try {
+            const { getProfileDetails } = await import('../services/profileService');
+            const details = await getProfileDetails(bookData.seller);
+            if (details && details.userImageUrl) {
+              formattedBook.sellerPhoto = details.userImageUrl;
+            }
+          } catch (detailsErr) {
+            console.warn('Details não encontrados para vendedor');
           }
         } catch (e) {
           console.warn('Não foi possível obter perfil do vendedor:', e.message || e);
