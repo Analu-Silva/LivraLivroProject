@@ -83,7 +83,7 @@ http://<IP_DA_MAQUINA>:8765
 
 * React Native
 * Expo
-* Axios
+* Fetch
 * Context API
 
 ---
