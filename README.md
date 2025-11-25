@@ -69,7 +69,7 @@ http://<IP_DA_MAQUINA>:8765
 ```
 ---
 
-## 6. Tecnologias Utilizadas
+## 5. Tecnologias Utilizadas
 
 ### Backend
 
@@ -88,7 +88,7 @@ http://<IP_DA_MAQUINA>:8765
 
 ---
 
-## 7. Equipe
+## 6. Equipe
 
 * **Alice Segatto**
 * **Aline Hoffmann**
