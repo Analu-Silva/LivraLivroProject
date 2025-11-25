@@ -20,6 +20,7 @@ public class ApiGatewayConfig {
 				// Eu quero que redirecione para o product-service para se eu tiver + instancias
 				.route(p -> p.path("/currency/**").uri("lb://currency-service"))
 				.route(p -> p.path("/greeting/**").uri("lb://greeting-service"))
+				.route(p -> p.path("/config/**").uri("lb://config-service"))
 				.route(p -> p.path("/auth/**").uri("lb://auth-service"))
 				.route(p -> p.path("/ws/auth/**").uri("lb://auth-service"))
 				.route(p -> p.path("/profile/**").uri("lb://user-service"))
